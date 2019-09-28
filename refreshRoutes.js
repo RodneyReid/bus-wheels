@@ -7,7 +7,7 @@
 const fetch = require('node-fetch')
 const fs = require('fs')
 const { PerformanceObserver, performance } = require('perf_hooks')
-
+const optimizeJSON = false
 // Set the following in your enviroment; ( export MCTSAPIKEY="----some jumble of characters---"  in shell)
 const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
 const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
@@ -38,7 +38,7 @@ async function busroutes() {
     return routes
   } catch (e) {
     console.error(`Can't fetch routes, aborting.`)
-    exit()
+    process.exit()
   }
   
 }
@@ -63,8 +63,9 @@ async function getPatterns(route) {
     }
     return routes[route]
   } catch (e) {
+    console.dir(e)
     console.error(`Error fetching ${BUSPATTERN}${route}  aborting.`)
-    exit() // TODO - maybe NOT abort so abruptly?
+    process.exit()
   }
 }
 
