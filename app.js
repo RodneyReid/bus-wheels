@@ -346,6 +346,7 @@ const init = () => {
   fastify.get('/busupdates', busupdates)
   fastify.get('/map', map_fe)
   fastify.get('/pattern/:route/pid/:pid', getPattern)
+  
   fastify.register(require('fastify-compress'), { global: true })
   fastify.register(require('fastify-static'), {
     root: path.join(__dirname, 'static'),
@@ -369,7 +370,7 @@ const init = () => {
       fastify.log.error(err)
       process.exit(1)
     } else {
-      console.log(`Express Server @ http://${addr}`)
+      console.log(`Fastify Server @ http://${addr}`)
     }
   })
 }
