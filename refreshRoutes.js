@@ -16,7 +16,6 @@ const BUSURL = 'http://realtime.ridemcts.com/bustime/api/v3/'
 const CTABUSURL = 'http://www.ctabustracker.com/bustime/api/v2/'
 
 const BUSPATTERN = `${BUSURL}getpatterns?key=${MCTSAPIKEY}&tmres=s&format=json&rt=`
-const BUSKEY = 'sUHm6kKkJp9XLHVFR6jQmacZX' // TODO move this into a config file before check in
 const BUSROUTES = `${BUSURL}getroutes?key=${MCTSAPIKEY}&format=json`
 
 let routes = {} // complete collection of all the fetches of routes, routeinfo, etc
@@ -44,31 +43,30 @@ async function busroutes() {
   
 }
 
+// 
 async function getPatterns(route) {
-    console.log(`${route} patterns`)
-    let response
-    try {
-      response = await fetch(`${BUSPATTERN}${route}`)
-      response = await response.json()
-      if(!optimizeJSON) {
-        routes[route].ptr = response['bustime-response'].ptr
-      } else {
-        routes[route].ptr = response['bustime-response'].ptr
-        for (let ptr in routes[route].ptr) {
-          for (let pt in routes[route].ptr[ptr]) {
-            
-          }
+  console.log(`${route} patterns`)
+  let response
+  try {
+    response = await fetch(`${BUSPATTERN}${route}`)
+    response = await response.json()
+    if(!optimizeJSON) {
+      routes[route].ptr = response['bustime-response'].ptr
+    } else {
+      routes[route].ptr = response['bustime-response'].ptr
+      for (let ptr in routes[route].ptr) {
+        for (let pt in routes[route].ptr[ptr]) {
+          // @todo:  shrink up ludicrously fake precise lat/longs here
         }
-        routes[route].ptr = response['bustime-response'].ptr
       }
-      return routes[route]
-    } catch (e) {
-      console.error(`Error fetching ${BUSPATTERN}${route}  aborting.`)
-      exit() // TODO - maybe NOT abort so abruptly?
+      routes[route].ptr = response['bustime-response'].ptr
     }
+    return routes[route]
+  } catch (e) {
+    console.error(`Error fetching ${BUSPATTERN}${route}  aborting.`)
+    exit() // TODO - maybe NOT abort so abruptly?
+  }
 }
-
-
 
 
 async function getAllPatterns() {
