@@ -16,7 +16,6 @@ const fastify = require('fastify')({
   logger: true
 })
 
-
 const fetch = require('node-fetch') // you can take this out once node has native fetch()!
 const fs = require('fs')
 const path = require('path')
@@ -26,15 +25,13 @@ const port = 3000
 
 // Set the following in your enviroment; ( ex: export MCTSAPIKEY="----your key---" )
 const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
-const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
+// const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
 const GMAPSKEY = process.env.GMAPSKEY  // GOOGLE MAPS get your own key: https://developers.google.com/maps/documentation/embed/get-api-key
-const MAPBOX_KEY = process.env.MAPBOXKEY // MAPBOX GL (not used yet) get your own key: https://docs.mapbox.com/help/how-mapbox-works/access-tokens/
-// TODO: 
+// const MAPBOX_KEY = process.env.MAPBOXKEY // MAPBOX GL (not used yet) get your own key: https://docs.mapbox.com/help/how-mapbox-works/access-tokens/
 
 const BUSURL = 'http://realtime.ridemcts.com/bustime/api/v3/'
-const CTABUSURL = 'http://www.ctabustracker.com/bustime/api/v2/'
+// const CTABUSURL = 'http://www.ctabustracker.com/bustime/api/v2/'
 const BUSVEHICLES = `${BUSURL}getvehicles?key=${MCTSAPIKEY}&tmres=s&format=json&rt=`
-const BUSPATTERN = `${BUSURL}getpatterns?key=${MCTSAPIKEY}&tmres=s&format=json&rt=`
 
 let apiCalls = 0 // how many calls have we made so far?  Usual max is 10k a day so am trying to avoid that!
 let routePatterns = {} // lat/long points for routes, along with stop points
@@ -84,7 +81,7 @@ const getAllRoutes = () => Object.keys(patterns)
 const getCurrentRoutes = () => {
   sch.ticks++
   
-  if (!(sch.ticks % sch.syncTick)) {
+  if ((sch.ticks % sch.syncTick) === 0) {
     sch.syncTime = Date.now()
     return getAllRoutes()
   } 
@@ -112,7 +109,7 @@ const getCurrentRoutes = () => {
   
   let sortedRoutes = sortRoutes.sort((a, b) => b[1] - a[1])
   
-  const max = !(sch.ticks % sch.slowTick) ? 30 : !(sch.ticks % sch.fastTick) ? 10 : 0
+  const max = (sch.ticks % sch.slowTick === 0) ? 30 : (sch.ticks % sch.fastTick === 0) ? 10 : 0
   sortedRoutes.forEach(el => {
     if (returned.length < max) returned.push(el[0])
   })
@@ -208,8 +205,8 @@ async function getVehicles(routes) {
 }
 
 // un mangle the time format returned from MCTS
-// @param datetime string  "YYYYMMDD HH:MM:SS"
-// @return integer milliseconds since epoch
+// @param {string} datetime  "YYYYMMDD HH:MM:SS"
+// @return {number} milliseconds since unix epoch
 const bustime2ms = datetime => {
   const result = new Date()
   const parts = { setYear: [0, 4], setDate: [6, 2], setHours: [9, 2], 
@@ -230,7 +227,7 @@ const buses = (req, res) => res.send(JSON.stringify(activeVehicles))
 const routes = (req, res) => {
   const rt = getAllRoutes()
   const outx = {}
-  let x = 0
+  
   rt.forEach(el => {
     outx[el] = {}
     outx[el].clr = patterns[el].clr
@@ -241,7 +238,7 @@ const routes = (req, res) => {
 
 // Gets the last updates only, excluding vehicles which
 // haven't been updated since last sync
-// @returns JSON - all updated buses
+// @returns nothing.    sends JSON of all updated buses
 const busupdates = (req, res) => {
   const updates = {}
   updRequests++
@@ -346,7 +343,7 @@ const init = () => {
   fastify.get('/busupdates', busupdates)
   fastify.get('/map', map_fe)
   fastify.get('/pattern/:route/pid/:pid', getPattern)
-  
+
   fastify.register(require('fastify-compress'), { global: true })
   fastify.register(require('fastify-static'), {
     root: path.join(__dirname, 'static'),

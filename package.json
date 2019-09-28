@@ -12,6 +12,7 @@
     "fastify": "^2.8.0",
     "fastify-compress": "^0.11.0",
     "fastify-static": "^2.5.0",
+    "jshint": "^2.10.2",
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
