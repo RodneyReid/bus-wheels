@@ -45,7 +45,7 @@ let busData = {} // all bus updates get dumped here, by vehicle id#
 //         dump the rest to a database if we care that much
 
 let map, mapOv // the google map, and the google overlay map
-let draggie // For draggabilly - allows us to drag around DIVs
+let draggies = [] // For draggabilly - allows us to drag around DIVs
 let expandPolyline = false // the bus route pattern for the expanded map
 let expandVehicle = false // the vehicle (marker) on the expanded map 
 let expandVid = 0 // what's the vehicleId being shown on expanded map?
@@ -372,7 +372,15 @@ const makeClickFunction = (marker, key) => {
 
 // was getBusData.   initMap hooks up the two maps, 
 async function initMap() {
-  draggie = new Draggabilly( '.draggable', {});
+  const draggableElems = document.querySelectorAll('.draggable')
+  
+  // init Draggabillies
+  for (let i = 0; i < draggableElems.length; i++) {
+    const draggie = new Draggabilly(draggableElems[i], {
+      // options...
+    })
+    draggies.push(draggie)
+  }
 
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12, 
