@@ -1,3 +1,4 @@
+/* jshint asi: true, browser: true, esversion: 9 */
 /**
  * @file Code for the Google map.  Pulls/draws route patterns, then continually updated lat/longs of vehicles. puts them, animated, on the map.
  * @author Rodney T Reid
@@ -16,16 +17,6 @@
 //   This started out as a proof of concept, and now it's overgrown that, as I continue to add new
 //   features/functionality.   We want to put this into Vue, and use Fastify on the back-end (<- fastify, done!)
 // </future>
-// @rant by Chris Hawkes (Vue vs React youtube) - "So, it's not like JavaScript
-// developers are idiots, or mordern ui developers are somehow inferior to
-// backend developers, that is completely bogus these days.  These fucking
-// client side frameworks are so fucking complicated these days that I would
-// argue we completely did a switcharoo... now the client side framework is much
-// more complicated to deal with than the backend code.  The backend code, you
-// have all kinds of tools, JavaScript - man, you got nobody holding your hand,
-// you're just thrown to the fuckin wolves with no weapons, and just torn apart -
-// that's JavaScript for you!"
-
 // how much do I want to scale my vehicles?  depends on zoom level.  Do they get labels? depends on zoom level
 const zoomPerScale =  [0.01, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.4, 0.4, 0.5, 0.5]
 const zoomFontSizes = [   0,    0,    0,    0,    3,    3,    3,    4,    4,    4,   5,   5,   7,   8,   8,   9,  10,  10,  11,  12,  12]
@@ -48,7 +39,7 @@ const compassPoints = [ // not used yet - should go on the vehicle display
   [315, 'NW',   'northwest'],
   [338, 'NNW',  'northnorthwest']
 ]
-let busData = {} // all bus updates get dumped here, by vehicle id#
+const busData = {} // all bus updates get dumped here, by vehicle id#
 // @todo - instead of continually adding to busData vids, we should trim
 //         them to a reasonable amount (say last 20 updates?), and optionally
 //         dump the rest to a database if we care that much
@@ -58,10 +49,10 @@ let expandVehicle = false // the vehicle (marker) on the expanded map
 let expandVid = 0 // what's the vehicleId being shown on expanded map?
 let expandRoute = 0 // what's the route of the expanded map shown vehicle?
 
-let routes = {} // key is route
-let pidPaths = {} // key is pathID
-let pidDrawn = {} // key is pathID
-let pathsBolded = [] // which pids are lit up right now?  We need this to dim later
+const routes = {} // key is route
+const pidPaths = {} // key is pathID
+const pidDrawn = {} // key is pathID
+const pathsBolded = [] // which pids are lit up right now?  We need this to dim later
 
 let dataPaused = false // are we focused away from page? then don't do fetches
 let pauseStart // when did we focus away from page?
