@@ -1,14 +1,12 @@
+/* jshint asi: true, node: true */
 /**
- * @file Runs the fastify webserver, grabs data from clever device's API for bus services for display on a google map
- *       To my knowledge, this will work with AC Transit (Oakland), MCTS (Milwaukee), CTA (Chicago)
+ * @file Runs the fastify webserver, grabs data from clever device's API 
+ *       for bus services for display on a google map
+ *       To my knowledge, this will work with AC Transit (Oakland), 
+         MCTS (Milwaukee), CTA (Chicago)
  *
  * @author Rodney T Reid
- * @date 2019-9-19 - 9-23
  * @version 1.0
- *
- * @note - express-static-gzip was modified to fix differences in express vs fastify getHeader/setHeader
- *         AND... it doesn't work yet. (test: delete the original file, keep .br), then try to load
- *         it will work with app.js(express), not with the app_fastify.js.....grr
  */
 
 'use strict'
@@ -42,7 +40,7 @@ let activeVehicles = {} // key: bus id - arrays of objects w/route (yes, redunda
 let startTime // when we started getting data
 let updRequests = 0 // how many update requests from the client?
 let updLastReq = 0  // when was the last update request?
-let watchList = [] // TODO - this should be by connectionID!!!
+let watchList = [] // @todo - this should be by connectionID
 // The Scheduler --- see comments
 let sch = {
   ticks: -1, // goes up one every tickSpeed milliseconds (-1 is to start w/sync)
@@ -66,10 +64,10 @@ const getAllRoutes = () => Object.keys(patterns)
 // Otherwise, we return at most 10 of the top routes with buses
 // @return array routes list.  ex:   ['BLU', '59', '55', '30X', ...]
 //
-// TODO this is not going to work as well with CTA/Chicago or Oakland - sch has to be better
-// TODO this relies heavily on the sch struct, so make into a class?
-// TODO future idea:  once (in the PM) we get to a point where:
-// active routes < 30, we switch the sync to grab the top 30 routes, 
+// @todo this is not going to work as well with CTA/Chicago or Oakland - sch has to be better
+// @todo this relies heavily on the sch struct, so make into a class?
+// @todo future idea:  once (in the PM) we get to a point where:
+//  active routes < 30, we switch the sync to grab the top 30 routes, 
 //  and the slowTick to grab top 20.
 // active routes < 20, we switch the sync to grab top 20, and keep slowTick at top 20.
 // activeRoutes < 10, change the sync to just those.
@@ -163,8 +161,9 @@ async function getActiveRoutes() {
       },
       { . . . ***/
 
-// @param string routes - comma delim list of routes to get vehicles from, max of 10
-// @return nothing; updates the activeVehicle and activeRoute objects
+// updates the activeVehicle and activeRoute objects
+// @param {string} routes - comma delim list of routes to get vehicles from, max of 10
+// @return nothing; 
 async function getVehicles(routes) {
   let response
   let vehicles = {}
@@ -177,7 +176,8 @@ async function getVehicles(routes) {
     response = await response.json() // { rt: "BLU", rtnm: "Fond du Lac", rtclr: "#000000", rtdd: "BLU" }
     vehicles = response['bustime-response'].vehicle
   } catch (e) {
-    console.error(`FETCH ROUTES error: not online or too many requests?`)
+    console.error(`FETCH ROUTES error: not online or too many requests?
+      ${e.toString()}`)
   }
   if (vehicles && vehicles.length) {
     vehicles.forEach(vehicle => {

@@ -21,7 +21,7 @@ const BUSROUTES = `${BUSURL}getroutes?key=${MCTSAPIKEY}&format=json`
 let routes = {} // complete collection of all the fetches of routes, routeinfo, etc
 
 // General information on all the bus routes available -- name, color, route moniker
-// @return array - each of the MCTS bus routes ex: { rt: "BLU", rtnm: "Fond du Lac", rtclr: "#000000", rtdd: "BLU" },
+// @return {array} - each of the MCTS bus routes ex: { rt: "BLU", rtnm: "Fond du Lac", rtclr: "#000000", rtdd: "BLU" },
 async function busroutes() {
   let response
   try {
@@ -39,11 +39,9 @@ async function busroutes() {
   } catch (e) {
     console.error(`Can't fetch routes, aborting.`)
     process.exit()
-  }
-  
+  } 
 }
-
-// 
+ 
 async function getPatterns(route) {
   console.log(`${route} patterns`)
   let response
@@ -69,19 +67,14 @@ async function getPatterns(route) {
   }
 }
 
-
 async function getAllPatterns() {
   await busroutes()
 
   const starttime = performance.now()
   const routeKeys = Object.keys(routes)
-  await Promise.all(routeKeys.map(async route => {  // 5100ms!
+  await Promise.all(routeKeys.map(async route => {  // 5100ms
     await getPatterns(route) 
   }))
-
-  //for (let route in routes) {   // <-- my old code... WEAK - 7x slower!  lol
-  //  await getPatterns(route)    // 35000ms
-  //}
 
   console.log(`Fetches done in ${Math.floor(performance.now()-starttime)}ms.    Saving routes.json`)
   fs.writeFile("routes.json", JSON.stringify(routes), 'utf8', err => {
