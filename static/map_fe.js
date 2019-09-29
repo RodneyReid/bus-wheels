@@ -1,4 +1,4 @@
-/* jshint asi: true, browser: true, esversion: 9 */
+/* globals maps, fontawesome, SlidingMarker, Draggabilly, document, google, fetch */
 /**
  * @file Code for the Google map.  Pulls/draws route patterns, then continually updated lat/longs of vehicles. puts them, animated, on the map.
  * @author Rodney T Reid
@@ -39,20 +39,22 @@ const compassPoints = [ // not used yet - should go on the vehicle display
   [315, 'NW',   'northwest'],
   [338, 'NNW',  'northnorthwest']
 ]
-const busData = {} // all bus updates get dumped here, by vehicle id#
+let busData = {} // all bus updates get dumped here, by vehicle id#
 // @todo - instead of continually adding to busData vids, we should trim
 //         them to a reasonable amount (say last 20 updates?), and optionally
 //         dump the rest to a database if we care that much
 
+let map, mapOv // the google map, and the google overlay map
+let draggie // For draggabilly - allows us to drag around DIVs
 let expandPolyline = false // the bus route pattern for the expanded map
 let expandVehicle = false // the vehicle (marker) on the expanded map 
 let expandVid = 0 // what's the vehicleId being shown on expanded map?
 let expandRoute = 0 // what's the route of the expanded map shown vehicle?
 
-const routes = {} // key is route
+let routes = {} // key is route
 const pidPaths = {} // key is pathID
 const pidDrawn = {} // key is pathID
-const pathsBolded = [] // which pids are lit up right now?  We need this to dim later
+let pathsBolded = [] // which pids are lit up right now?  We need this to dim later
 
 let dataPaused = false // are we focused away from page? then don't do fetches
 let pauseStart // when did we focus away from page?
@@ -277,7 +279,7 @@ async function drawPattern(pid, route, color) {
 
 // The route selector UI - takes the list of routes and makes 
 // clickable icons (with route# in route color) in a floating div
-//
+// 
 const buildRouteUI = () => {
   let col = 0
   let out = `<div id="routes" class="routes"><div class="routerow">`
@@ -370,6 +372,8 @@ const makeClickFunction = (marker, key) => {
 
 // was getBusData.   initMap hooks up the two maps, 
 async function initMap() {
+  draggie = new Draggabilly( '.draggable', {});
+
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12, 
     center: {lat: 43.038902, lng: -87.9065}, 
