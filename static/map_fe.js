@@ -39,6 +39,7 @@ const compassPoints = [ // not used yet - should go on the vehicle display
   [315, 'NW',   'northwest'],
   [338, 'NNW',  'northnorthwest']
 ]
+const dbug = true // turn on usful console logging
 let busData = {} // all bus updates get dumped here, by vehicle id#
 // @todo - instead of continually adding to busData vids, we should trim
 //         them to a reasonable amount (say last 20 updates?), and optionally
@@ -65,7 +66,7 @@ let curZoomFontSize = "10pt"
 // Delete a bus that isn't seen anymore
 // @param {string} vid - vehicle id # of bus to delete
 const deleteBus = (vid) => {
-  console.log(`-🚌 ${vid} Rt: ${busData[vid][0].rt} has left the building...`)
+  if (dbug) console.log(`-🚌 ${vid} Rt: ${busData[vid][0].rt} has left the building...`)
   busData[vid][0].map.setMap(null)
   delete busData[vid]
 }
@@ -95,7 +96,6 @@ const toggleRoute = e => {
 const routeMouseOver = e => {
   let rt = e.substr(1)
   const pids = findRoutePids(rt)
-  console.dir(pids)
   pathsBolded = []
 
   for (let x in busData) {
@@ -212,7 +212,7 @@ async function displayBus(key) {
 const addBus = (key, busInfo) => {
   busData[key] = []
   busData[key].push(busInfo)
-  console.log(`+🚌 ${key} Rt: ${busData[key][0].rt} added`)
+  if (dbug) console.log(`+🚌 ${key} Rt: ${busData[key][0].rt} added`)
   displayBus(key)
 }
 
@@ -443,7 +443,7 @@ const resumeDataXfer = () => {
   dataPaused = false
   const pausedSeconds = (Date.now() - pauseStart) / 1000
   if (pauseStart && pausedSeconds > 100) {
-    console.log(`Long delay/quick update on: ${pausedSeconds} seconds`)
+    if (dbug) console.log(`Long delay/quick update on: ${pausedSeconds} seconds`)
     mapUpdates()
   }
   pauseStart = 0
@@ -453,14 +453,15 @@ const resumeDataXfer = () => {
 
 // RGB2HSV and HSV2RGB are based on Color Match Remix [http://color.twysted.net/]
 // which is based on or copied from ColorMatch 5K [http://colormatch.dk/]
-// Forgive me, I didn't write this [rr]
+// Forgive me, I didn't write this, but I improved it a bit [rr]
 
 // @param {array} rgb - array with red, green, blue values (0-255)
 // @return {array} hsv - array with hue (0-360), saturation (0-100), value (0-100)
 let RGB2HSV = rgb => {
-  let hsv = {}
-  let max = max3(rgb.r, rgb.g, rgb.b)
-  let dif = max - min3(rgb.r, rgb.g, rgb.b)
+  const hsv = {}
+  const max = max3(rgb.r, rgb.g, rgb.b)
+  const dif = max - min3(rgb.r, rgb.g, rgb.b)
+  
   hsv.saturation = (max == 0.0) ? 0 : (100 * dif / max)
   
   if (hsv.saturation === 0) 
@@ -485,19 +486,17 @@ let RGB2HSV = rgb => {
 // @param {array} hsv - array with hue (0-360), saturation (0-100), value (0-100)
 // @return {array} rgb - array with red, green, blue values (0-255)
 let HSV2RGB = hsv => {
-  let rgb = {}
-  if (!hsv.saturation) {
-    rgb.r = rgb.g = rgb.b = Math.round(hsv.value * 2.55)
-  } else {
+  const rgb = {}
+  if (hsv.saturation) {
     hsv.hue /= 60
     hsv.saturation /= 100
     hsv.value /= 100
 
-    let i = Math.floor(hsv.hue)
-    let f = hsv.hue - i
-    let p = hsv.value * (1 - hsv.saturation)
-    let q = hsv.value * (1 - hsv.saturation * f)
-    let t = hsv.value * (1 - hsv.saturation * (1 - f))
+    const i = Math.floor(hsv.hue)
+    const f = hsv.hue - i
+    const p = hsv.value * (1 - hsv.saturation)
+    const q = hsv.value * (1 - hsv.saturation * f)
+    const t = hsv.value * (1 - hsv.saturation * (1 - f))
 
     switch(i) {
       case 0:
@@ -521,32 +520,34 @@ let HSV2RGB = hsv => {
     rgb.r = Math.round(rgb.r * 255)
     rgb.g = Math.round(rgb.g * 255)
     rgb.b = Math.round(rgb.b * 255)
+  } else {
+    rgb.r = rgb.g = rgb.b = Math.round(hsv.value * 2.55)
   }
   return rgb
 }
 
 // Shift the hue, don't let it run over.
-// @param {number} h - the starting hue
-// @param {number} s - how much to shift it by
+// @param {number} hue - the starting hue
+// @param {number} shift - how much to shift it by
 // @return {number} Normalized hue
-let HueShift = (h, s) => { 
-  h += s
-  while (h >= 360.0) h -= 360.0
-  while (h < 0.0) h += 360.0
+let HueShift = (hue, shift) => { 
+  hue += shift
+  while (hue >= 360.0) hue -= 360.0
+  while (hue < 0.0) hue += 360.0
 
-  return h
+  return hue
 }
 
 // Shift the luminence, don't let it run over.
-// @param {number} l - the starting luminence 
-// @param {number} s - how much to shift it by
+// @param {number} lum - the starting luminence 
+// @param {number} shift - how much to shift it by
 // @return {number} normalized luminence
-let LumShift = (l, s) => { 
-  l += s 
-  while (l >= 100.0) l -= 100.0 
-  while (l < 0.0) l += 100.0 
+let LumShift = (lum, shift) => { 
+  lum += shift 
+  while (lum >= 100.0) lum -= 100.0 
+  while (lum < 0.0) lum += 100.0 
 
-  return l
+  return lum
 }
 
 //min max via Hairgami_Master (sidenote: i'd hate to see a min4/max4 min5/max5 in this style!)
@@ -569,3 +570,20 @@ if (typeof document.addEventListener === "undefined" || hidden === undefined) {
 } else {
   document.addEventListener(visibilityChange, handleVisibilityChange, false)
 }
+
+onFullScreen()
+// @param {function} cb - what happens then;
+// @return {object} - { isFullScreen, event }
+const onFullScreen = cb => {
+  const eventNames = [
+    'fullscreenchange',
+    'webkitfullscreenchange',
+    'mozfullscreenchange'
+  ]
+
+  eventNames.map(e => document.addEventListener(e, event => {
+    const isFullScreen = document['fullScreen'] ||
+      document['mozFullScreen'] || document['webkitIsFullScreen']
+      return cb({ isFullScreen, event })
+  }))
+};

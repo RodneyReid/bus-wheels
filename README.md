@@ -2,7 +2,7 @@
 
 Bus Wheels is a real-time bus and route visualizer.  It uses nodejs/fastify on the back-end, and google maps + vanilla javascript on the front-end.
 
-![Bus Wheels screenshot](/static/screenshot.png)
+![Bus Wheels screenshot](/static/screenshot.webp)
 
 ## Installation
 
