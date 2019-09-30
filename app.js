@@ -371,7 +371,7 @@ const init = () => {
       fastify.log.error(err)
       process.exit(1)
     } else {
-      console.log(`Fastify Server @ http://${addr}`)
+      console.log(`Fastify Server @ ${addr}`)
     }
   })
 }
