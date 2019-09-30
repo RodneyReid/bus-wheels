@@ -279,7 +279,8 @@ async function drawPattern(pid, route, color) {
 
 // The route selector UI - takes the list of routes and makes 
 // clickable icons (with route# in route color) in a floating div
-// 
+// @@todo - geez I really have to set up vue/react/lit-html with this project
+// because this style is yawn old
 const buildRouteUI = () => {
   let col = 0
   let out = `<div id="routes" class="routes"><div class="routerow">`
@@ -296,16 +297,15 @@ const buildRouteUI = () => {
   document.getElementById('routecontainer').innerHTML = out
 }
 
-
-// Get all the routes. 
-// @todo - this should also get all the patterns in one swoop
-//
+// Get all the routes, store them in the route object, build route selector
+// @todo - this should also get all the patterns too in one swoop
 async function getRoutes() {
   let response = await fetch('/routes')
   routes = await response.json()
   buildRouteUI()
 }
 
+// Show a popup window giving information on the vehicle, when vehicle clicked.
 // @todo - something so we can only have one clicked at a time.
 //         also - maps.Infowindow isn't going to work for us - put in floating div
 // @param {object} marker - map marker (that looks like a bus)
@@ -320,11 +320,16 @@ const makeClickFunction = (marker, key) => {
   })
 
   marker.addListener('click', () => {
-    // if (curZoom < 15) map.setZoom(15)  // Doesn't mesh well with the 
+    // if (curZoom < 15) map.setZoom(15)  
+    // the above doesn't mesh well with the overlay map nav so removed for now
     map.setCenter(marker.getPosition())
     mapOv.setCenter(marker.getPosition())
     infowindow.open(marker.get('map'), marker)
-
+    document.getElementById('routeinfo').innerHTML = `
+      <b>Vehicle ID</b> ${busData[key][0].vid}<br />
+      <b>Route/Dest</b> ${busData[key][0].rt}/${busData[key][0].des}<br />
+      <b>Head/Speed</b> ${busData[key][0].hdg}deg/${busData[key][0].spd}mph<br />
+    `
     const mpath = []
     
     pidPaths[busData[key][0].pid].forEach(pObj => {
@@ -406,13 +411,6 @@ async function initMap() {
     gestureHandling: false,
     keyboardShortcuts: false,
     mapTypeControl: false,
-    restriction: {
-      latLngBounds: {north: 43.279, south: 42.870, west: -88.126, east: -87.81},
-      strictBounds: false
-    },
-    minZoom: 10,
-    maxZoom: 20,
-    controlSize: 30,
     backgroundColor: "#334148",
     styles: [{featureType:"all",stylers:[{hue:"#0000b0"},{invert_lightness:"true"},{saturation:-30}]}],
   })
@@ -430,18 +428,17 @@ async function initMap() {
     displayBus(key)
   }
 
-  setInterval(mapUpdates, 4000) // 10500) // we now made this faster x 2!
+  setInterval(mapUpdates, 4000) // probably a little too fast; maybe negotiate with back-end, since it's only one user (ATM?) ---- also, make this setTimeout and on fire reenable it, so we can adjust speed along the way
   return response
 }
-
-
-// called when pageVisibility triggers web page not visible (tabbed to another, minimized window, etc)
+  
+  // called when pageVisibility triggers web page not visible (tabbed to another, minimized window, etc)
 const pauseDataXfer = () => {
   dataPaused = true
   pauseStart = Date.now()
 }
 
-// called when pageVisibility says we're in view again.
+// called when pageVisibility says we're in view again
 const resumeDataXfer = () => {
   dataPaused = false
   const pausedSeconds = (Date.now() - pauseStart) / 1000
