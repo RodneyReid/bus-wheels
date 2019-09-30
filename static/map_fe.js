@@ -89,6 +89,11 @@ const findRoutePids = rt => {
 // @param {string} id - css id is also the route (with a preceding x)
 const toggleRoute = e => {
   const rt = e.substr(1) // don't want that preceding x
+
+  let response = fetch(`/watching/${rt}`)
+  //response = response.json()
+  //return response
+
 }
 
 // If we roll over a route we want to highlight the route patterns
@@ -300,9 +305,14 @@ const buildRouteUI = () => {
 
 // Get all the routes, store them in the route object, build route selector
 // @todo - this should also get all the patterns too in one swoop
+// @todo - should store this in localstorage, and patterns w/serviceworker??
 async function getRoutes() {
   let response = await fetch('/routes')
   routes = await response.json()
+
+  // this should now get the localStorage routes, favorite stops, etc, that were 
+  // previously selected.
+
   buildRouteUI()
 }
 
@@ -341,8 +351,8 @@ const makeClickFunction = (marker, key) => {
     expandPolyline = new google.maps.Polyline({
       path: mpath,
       strokeColor: routes[busData[key][0].rt].clr,
-      strokeOpacity: 0.7,
-      strokeWeight: 2
+      strokeOpacity: 0.8,
+      strokeWeight: 3
     })
     expandPolyline.setMap(mapOv)
     const bus = busData[key][0]
@@ -365,7 +375,7 @@ const makeClickFunction = (marker, key) => {
         strokeOpacity: 1,
         fillColor: routes[busData[key][0].rt].clr,
         fillOpacity: 0.8,
-        labelOrigin: google.maps.Point(3, -150)
+        labelOrigin: google.maps.Point(300, -1500)
       },
       label: {
         text: key,
@@ -380,6 +390,7 @@ const makeClickFunction = (marker, key) => {
 async function initMap() {
   const draggableElems = document.querySelectorAll('.draggable')
   
+
   // init Draggabillies
   for (let i = 0; i < draggableElems.length; i++) {
     const draggie = new Draggabilly(draggableElems[i], {
