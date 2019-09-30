@@ -305,7 +305,7 @@ const buildRouteUI = () => {
 
 // Get all the routes, store them in the route object, build route selector
 // @todo - this should also get all the patterns too in one swoop
-// @todo - should store this in localstorage, and patterns w/serviceworker??
+// @todo - should store this in localstorage, and patterns w/serviceworker?
 async function getRoutes() {
   let response = await fetch('/routes')
   routes = await response.json()
@@ -583,7 +583,6 @@ if (typeof document.addEventListener === "undefined" || hidden === undefined) {
   document.addEventListener(visibilityChange, handleVisibilityChange, false)
 }
 
-onFullScreen()
 // @param {function} cb - what happens then;
 // @return {object} - { isFullScreen, event }
 const onFullScreen = cb => {
@@ -598,4 +597,6 @@ const onFullScreen = cb => {
       document['mozFullScreen'] || document['webkitIsFullScreen']
       return cb({ isFullScreen, event })
   }))
-};
+}
+
+onFullScreen()
