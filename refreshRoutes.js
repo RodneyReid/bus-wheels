@@ -7,7 +7,7 @@
 const fetch = require('node-fetch')
 const fs = require('fs')
 const { PerformanceObserver, performance } = require('perf_hooks')
-const optimizeJSON = false
+const optimizeJSON = false // smaller precision lat/longs
 // Set the following in your enviroment; ( export MCTSAPIKEY="----some jumble of characters---"  in shell)
 const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
 const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
@@ -52,9 +52,16 @@ async function getPatterns(route) {
       routes[route].ptr = response['bustime-response'].ptr
     } else {
       routes[route].ptr = response['bustime-response'].ptr
+      // @todo - don't run optimizeJSON true - doesn't work yet
       for (let ptr in routes[route].ptr) {
         for (let pt in routes[route].ptr[ptr]) {
-          // @todo:  shrink up ludicrously fake precise lat/longs here
+          let lat = routes[route].ptr[ptr][pt].lat 
+          let lon = routes[route].ptr[ptr][pt].lon
+          lat = Math.floor(lat * 10000) / 10000
+          lon = Math.floor(lon * 10000) / 10000
+          console.log(`${pt} ${ptr} ${routes[route].ptr[ptr][pt]}`)
+          routes[route].ptr[ptr][pt].lat = lat
+          routes[route].ptr[ptr][pt].lon = lon
         }
       }
       routes[route].ptr = response['bustime-response'].ptr

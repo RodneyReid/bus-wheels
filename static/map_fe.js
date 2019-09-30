@@ -17,7 +17,7 @@
 //   This started out as a proof of concept, and now it's overgrown that, as I continue to add new
 //   features/functionality.   We want to put this into Vue, and use Fastify on the back-end (<- fastify, done!)
 // </future>
-// how much do I want to scale my vehicles?  depends on zoom level.  Do they get labels? depends on zoom level
+// how much do I want to scale the vehicles?  depends on zoom level.  Do they get labels? depends on zoom level
 const zoomPerScale =  [0.01, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.4, 0.4, 0.5, 0.5]
 const zoomFontSizes = [   0,    0,    0,    0,    3,    3,    3,    4,    4,    4,   5,   5,   7,   8,   8,   9,  10,  10,  11,  12,  12]
 
@@ -53,6 +53,7 @@ let expandVid = 0 // what's the vehicleId being shown on expanded map?
 let expandRoute = 0 // what's the route of the expanded map shown vehicle?
 
 let routes = {} // key is route
+
 const pidPaths = {} // key is pathID
 const pidDrawn = {} // key is pathID
 let pathsBolded = [] // which pids are lit up right now?  We need this to dim later

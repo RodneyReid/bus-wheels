@@ -38,6 +38,10 @@ let activeRoutes = {}  // which routes have buses on them, and how many? key is 
 let activeCheckTime = Date.now()
 let activeVehicles = {} // key: bus id - arrays of objects w/route (yes, redundant. TODO), lat/long, speed, last update, delayed?, heading, destination
 let startTime // when we started getting data
+
+let clientRoutes = {} // key is route, then last query
+let clientProcs = {} // key is fastify process ID, data is last request time, first req time, requests
+
 let updRequests = 0 // how many update requests from the client?
 let updLastReq = 0  // when was the last update request?
 let watchList = [] // @todo - this should be by connectionID
@@ -243,7 +247,6 @@ const busupdates = (req, res) => {
   const updates = {}
   updRequests++
   updLastReq = Date.now()
-
   for (let key in activeVehicles) {
     const ve = activeVehicles[key][0]
     if (ve.updated > (sch.syncTime - (1000*60*4 /*+4min*/))) {
@@ -290,9 +293,10 @@ const map_fe = (req, res) => {
 // let us know that a certain process is watching a certain bus line.
 // this will let us know to turn ON fast referencing for a line
 // @param {string} req..param.route - which route to start watching.
+// @todo - store process id too
 const watching = (req, res) => {
   const rt = req.params.route
-  if (rt in watchList) { 
+  if (rt in watchList) { // @todo ugly
   } else {
     watchList[rt] = true
   } 
@@ -304,7 +308,7 @@ const watching = (req, res) => {
 const unwatching = (req, res) => {
   const rt = req.params.route
   for (let x = 0; x !== watchList.length; x++) {
-    if (watchList[x] !== rt) {
+    if (watchList[x] === rt) {
       delete watchList[x]
     }
   }
@@ -320,7 +324,7 @@ const unwatching = (req, res) => {
 const init = () => {
   if (typeof patterns !== 'object') {
     console.error(`You have to run refreshRoutes.js first, you have no routes.json file!`)
-    return
+    process.exit(1)
   }
 
   startTime = Date.now()
