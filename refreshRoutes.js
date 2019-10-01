@@ -16,7 +16,7 @@ const agencies = require('./agencies.json')
 const { PerformanceObserver, performance } = require('perf_hooks')
 const optimizeJSON = false // smaller precision lat/longs
 // Set the following in your enviroment; ( export MCTSAPIKEY="----some jumble of characters---"  in shell)
-const TAGENCYKEY = process.env.TAGENCYKEY // generic for all supposed agencies
+const TAGENCYKEY = process.env.MCTSAPIKEY // for now process.env.TAGENCYKEY // generic for all supposed agencies
 const TAGENCY = process.env.TAGENCY // which agency?  MCTS, ACT, CTA, MTA, etc.
 const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
 const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
@@ -108,16 +108,23 @@ async function getAllPatterns() {
 // with their TAGENCYKEY, and see which one doesn't bomb out.
 //
 const determineAgency = () => {
-
+  let response
   for (let agency in agencies) {
     try {
       const url = `${agencies[agency].url}getroutes?key=${TAGENCYKEY}&format=json`
-      response = await fetch(url)
-      response = await response.json()
+      console.log(url)
+      response = fetch(url)
+      // response = response.json()
+      console.log(`FOUND.  Agency is ${agency}`)
+      return agency
     } catch (e) {
-
+      console.dir(e)
+      console.log(`isn't agency ${agency}`)
+      // do nothing, we'll go to the next agency
     }
   }
+  return false // agency wasn't discovered
 }
-// determineAgency()
+
+determineAgency()
 getAllPatterns()
