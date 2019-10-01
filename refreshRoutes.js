@@ -16,7 +16,7 @@ const agencies = require('./agencies.json')
 const { PerformanceObserver, performance } = require('perf_hooks')
 const optimizeJSON = false // smaller precision lat/longs
 // Set the following in your enviroment; ( export MCTSAPIKEY="----some jumble of characters---"  in shell)
-const TAGENCYKEY = process.env.MCTSAPIKEY // for now process.env.TAGENCYKEY // generic for all supposed agencies
+const TAGENCYKEY = process.env.MCTSAPIKEY // @TODO -- for now process.env.TAGENCYKEY // generic for all supposed agencies
 const TAGENCY = process.env.TAGENCY // which agency?  MCTS, ACT, CTA, MTA, etc.
 const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
 const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
@@ -114,7 +114,6 @@ const determineAgency = () => {
       const url = `${agencies[agency].url}getroutes?key=${TAGENCYKEY}&format=json`
       console.log(url)
       response = fetch(url)
-      // response = response.json()
       console.log(`FOUND.  Agency is ${agency}`)
       return agency
     } catch (e) {
@@ -125,6 +124,14 @@ const determineAgency = () => {
   }
   return false // agency wasn't discovered
 }
-
-determineAgency()
-getAllPatterns()
+if (TAGENCYKEY && TAGENCYKEY.length > 10) {
+  if (TAGENCY && TAGENCY.length > 2) {
+    gAgency = TAGENCY
+  } else {
+    gAgency = determineAgency()
+  }
+  getAllPatterns()
+} else {
+  console.error(`env var TAGENCYKEY isn't set, aborting.`)
+  process.exit(1)
+}
