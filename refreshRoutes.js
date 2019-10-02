@@ -1,14 +1,16 @@
-// refreshRoutes makes a file of all the static route data -
-// stops, color, pid/pid names, and path lat/longs
-// @author Rodney Reid
-//
-// @todo - to incorporate more transit systems and a speedier setup:
-//  -- in the middle of that!
-// 
-// we should put something in the routes file that tells us which agency we're dealing with,
-// and also puts the center lat/long, initial zoom, and bounding lat/longs in an object.
-// 
 'use strict'
+/**
+ *  refreshRoutes makes a file of all the static route data
+ * stops, color, pid/pid names, and path lat/longs
+ * @author Rodney Reid
+ *
+ * @todo - to incorporate more transit systems and a speedier setup:
+ *  -- in the middle of that!
+ * 
+ * we should put something in the routes file that tells us which agency we're dealing with,
+ * and also puts the center lat/long, initial zoom, and bounding lat/longs in an object.
+ *
+**/ 
 
 const fetch = require('node-fetch')
 const fs = require('fs')
@@ -28,9 +30,11 @@ const BUSPATTERN = `${BUSURL}getpatterns?key=${MCTSAPIKEY}&tmres=s&format=json&r
 const BUSROUTES = `${BUSURL}getroutes?key=${MCTSAPIKEY}&format=json`
 
 let routes = {} // complete collection of all the fetches of routes, routeinfo, etc
-
-// General information on all the bus routes available -- name, color, route moniker
-// @return {array} - each of the MCTS bus routes ex: { rt: "BLU", rtnm: "Fond du Lac", rtclr: "#000000", rtdd: "BLU" },
+let gAgency = false
+/**
+ * General information on all the bus routes available -- name, color, route moniker
+ * @return {array} - each of the MCTS bus routes ex: { rt: "BLU", rtnm: "Fond du Lac", rtclr: "#000000", rtdd: "BLU" },
+**/
 async function busroutes() {
   let response
   try {
@@ -51,6 +55,10 @@ async function busroutes() {
   } 
 }
  
+/**
+ * @param {string} route - the route we want patterns from
+ * @return {object} route patterns
+**/
 async function getPatterns(route) {
   console.log(`${route} patterns`)
   let response
@@ -83,6 +91,9 @@ async function getPatterns(route) {
   }
 }
 
+/**
+ * gets all the routes, which we bundle up and then concurrently fetch all the route patterns
+**/
 async function getAllPatterns() {
   await busroutes()
 
@@ -103,10 +114,12 @@ async function getAllPatterns() {
   })  
 }
 
-// if TAGENCY (transit agency) isn't set in shell, but TANGENCYKEY is, we want to try
-// all agencies and determine which one it is.  This should be simple - request a routelist,
-// with their TAGENCYKEY, and see which one doesn't bomb out.
-//
+/**
+ * if TAGENCY (transit agency) isn't set in shell, but TANGENCYKEY is, we want to try
+ * all agencies and determine which one it is.  This should be simple - request a routelist,
+ * with their TAGENCYKEY, and see which one doesn't bomb out.
+ * @return {string|false} - the agency matching the API key.  Or false if not found
+**/
 const determineAgency = () => {
   let response
   for (let agency in agencies) {
@@ -124,14 +137,23 @@ const determineAgency = () => {
   }
   return false // agency wasn't discovered
 }
-if (TAGENCYKEY && TAGENCYKEY.length > 10) {
-  if (TAGENCY && TAGENCY.length > 2) {
-    gAgency = TAGENCY
+
+
+/**
+ * Initialize, sanity check env vars, get all routes and patterns
+**/
+const init = () => {
+  if (TAGENCYKEY && TAGENCYKEY.length > 10) {
+    if (TAGENCY && TAGENCY.length > 2) {
+      gAgency = TAGENCY
+    } else {
+      gAgency = determineAgency()
+    }
+    getAllPatterns()
   } else {
-    gAgency = determineAgency()
+    console.error(`env var TAGENCYKEY isn't set, aborting.`)
+    process.exit(1)
   }
-  getAllPatterns()
-} else {
-  console.error(`env var TAGENCYKEY isn't set, aborting.`)
-  process.exit(1)
 }
+
+init()
