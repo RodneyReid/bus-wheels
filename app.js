@@ -54,32 +54,33 @@ let sch = {
   slowTick: 4, // we get the top 30 every slowTick, 
   fastTick: 1, // else we get the top 10 for the rest of the ticks
 }
-
-// Get all the routes without any of the fluff
-// @return array routes list.  ex:   ['BLU', '59', '55', '30X', ...]
+/**
+ * Get all the routes without any of the fluf
+ * @return array routes list.  ex:   ['BLU', '59', '55', '30X', ...]
+**/
 const getAllRoutes = () => Object.keys(patterns)
-
-// getCurrentRoutes is a complex beast; the reasoning is I didn't want
-// to go over the 10,000 maximum API calls a day, and this further limited
-// the number of calls done but got the highest # of bus updates.
-// 
-// Every 20 ticks, we return back the whole list of routes
-// Every 4 ticks, we return at most 30 of the top routes with buses
-// Otherwise, we return at most 10 of the top routes with buses
-// @return array routes list.  ex:   ['BLU', '59', '55', '30X', ...]
-//
-// @todo this is not going to work as well with CTA/Chicago or Oakland - sch has to be better
-// @todo this relies heavily on the sch struct, so make into a class?
-// @todo future idea:  once (in the PM) we get to a point where:
-//  active routes < 30, we switch the sync to grab the top 30 routes, 
-//  and the slowTick to grab top 20.
-// active routes < 20, we switch the sync to grab top 20, and keep slowTick at top 20.
-// activeRoutes < 10, change the sync to just those.
-// activeRoutes = 0, flip the PM clock to new day.  change slowTick and fastTick
-// so they don't do anything.  SyncTick now pulls all routes.
-// 
-// activeRoutes > 0 (at least one active route), we can change the slowTick and
-// fastTick back to their normal values.
+/**
+ * getCurrentRoutes is a complex beast; the reasoning is I didn't want
+ * to go over the 10,000 maximum API calls a day, and this further limited
+ * the number of calls done but got the highest # of bus updates.
+ * 
+ * Every 20 ticks, we return back the whole list of routes
+ * Every 4 ticks, we return at most 30 of the top routes with buses
+ * Otherwise, we return at most 10 of the top routes with buses
+ * @return array routes list.  ex:   ['BLU', '59', '55', '30X', ...]
+ *
+ * @todo this is not going to work as well with CTA/Chicago or Oakland - sch has to be better
+ * @todo this relies heavily on the sch struct, so make into a class?
+ * @todo future idea:  once (in the PM) we get to a point where:
+ *  active routes < 30, we switch the sync to grab the top 30 routes, 
+ *  and the slowTick to grab top 20.
+ *  active routes < 20, we switch the sync to grab top 20, and keep slowTick at top 20.
+ *  activeRoutes < 10, change the sync to just those.
+ *  activeRoutes = 0, flip the PM clock to new day.  change slowTick and fastTick
+ *  so they don't do anything.  SyncTick now pulls all routes. 
+ *  activeRoutes > 0 (at least one active route), we can change  the slowTick and
+ *  fastTick back to their normal values.
+**/
 const getCurrentRoutes = () => {
   sch.ticks++
   
@@ -118,6 +119,9 @@ const getCurrentRoutes = () => {
   return returned
 }
 
+/**
+ * Bundles the current routes in groups of ten, then concurrently fetches them all
+**/
 async function getActiveRoutes() {
   const MAXLENGTH = 10 // imposed by clever devices API
 
@@ -165,9 +169,11 @@ async function getActiveRoutes() {
       },
       { . . . ***/
 
-// updates the activeVehicle and activeRoute objects
-// @param {string} routes - comma delim list of routes to get vehicles from, max of 10
-// @return nothing; 
+/**
+ * updates the activeVehicle and activeRoute objects
+ * @param {string} routes - comma delim list of routes to get vehicles from, max of 10
+ * @return nothing
+**/
 async function getVehicles(routes) {
   let response
   let vehicles = {}
@@ -208,9 +214,11 @@ async function getVehicles(routes) {
   }
 }
 
-// un mangle the time format returned from MCTS
-// @param {string} datetime  "YYYYMMDD HH:MM:SS"
-// @return {number} milliseconds since unix epoch
+/**
+ * un mangle the time format returned from MCTS
+ * @param {string} datetime  "YYYYMMDD HH:MM:SS"
+ * @return {number} milliseconds since unix epoch
+**/
 const bustime2ms = datetime => {
   const result = new Date()
   const parts = { setYear: [0, 4], setDate: [6, 2], setHours: [9, 2], 
@@ -222,9 +230,11 @@ const bustime2ms = datetime => {
   return result.getTime() 
 }
 
-// Returns the entire (since running) vehicles + GPS points JSON
-// THIS IS TERRIBLE, NEVER ALLOW THIS!  Let's change this to only return the
-// updates.
+/**
+ * Returns the entire (since running) vehicles + GPS points JSON
+ * THIS IS TERRIBLE, NEVER ALLOW THIS!  Let's change this to only return the
+ * updates.
+**/
 const buses = (req, res) => res.send(JSON.stringify(activeVehicles))
 
 // Returns the entire route list, route id, with route color and full name
@@ -240,9 +250,11 @@ const routes = (req, res) => {
   res.send(JSON.stringify(outx))
 }
 
-// Gets the last updates only, excluding vehicles which
-// haven't been updated since last sync
-// @returns nothing.    sends JSON of all updated buses
+/**
+ * Gets the last updates only, excluding vehicles which
+ * haven't been updated since last sync
+ * @returns nothing.    sends JSON of all updated buses
+**/
 const busupdates = (req, res) => {
   const updates = {}
   updRequests++
@@ -256,13 +268,15 @@ const busupdates = (req, res) => {
   res.send(JSON.stringify(updates))
 }
 
-// Get the route path/pattern (list of lat/long points)
-// @param rt string     The route we want the pattern for
-// @param pid string    The pattern ID wanted for this route
-// @returns JSON        Lat/Long path of whole route, with stops 
-//
-// @TODO at this rate for a PWA, seems like a good idea to send
-//       this ONCE, brotli'd - 250k vs 5meg.  We get ~50megs as a PWA, sooo...
+
+/**
+ * Get the route path/pattern (list of lat/long points)
+ * @param {string} rt     The route we want the pattern for
+ * @param {string{ pid    The pattern ID wanted for this route
+ * @returns {object} JSON Lat/Long path of whole route, with stops 
+ * @TODO at this rate for a PWA, seems like a good idea to send
+ *       this ONCE, brotli'd - 250k vs 5meg.  We get ~50megs as a PWA, sooo...
+**/
 const getPattern = (req, res) => {
   const rt = req.params.route
   const pid = req.params.pid
@@ -274,15 +288,17 @@ const getPattern = (req, res) => {
   })
 }
 
-
-// Send the user information about the agency we're going to be displaying.
-// 
+/**
+ * Send the user information about the agency we're going to be displaying.
+**/ 
 const agencyconfig = (req, res) => {
 
 }
 
-// load the map.   Yes there are better ways to do this, 
-// @TODO: -- template plugin? (because of that pesky Google Maps API KEY)
+/**
+ * load the map.   Yes there are better ways to do this, 
+ * @TODO: -- template plugin? (because of that pesky Google Maps API KEY)
+**/
 const map_fe = (req, res) => {
   const filePath = path.join(__dirname, '/static/busmap.html')
   if (res.hasHeader('Content-Type')) {
@@ -297,10 +313,12 @@ const map_fe = (req, res) => {
 }
 
 
-// let us know that a certain process is watching a certain bus line.
-// this will let us know to turn ON fast referencing for a line
-// @param {string} req..param.route - which route to start watching.
-// @todo - store process id too
+/**
+ * let us know that a certain process is watching a certain bus line.
+ * this will let us know to turn ON fast referencing for a line
+ * @param {string} req..param.route - which route to start watching.
+ * @todo - store process id too
+**/
 const watching = (req, res) => {
   const rt = req.params.route
   if (rt in watchList) { // @todo ugly
@@ -309,9 +327,11 @@ const watching = (req, res) => {
   } 
 }
 
-// let us know that a certain process stops watching a certain bus line.
-// this will let us know to turn off fast rerferencing of a line
-// @param {string} req..param.route - which route to finish watching.
+/**
+ * let us know that a certain process stops watching a certain bus line.
+ * this will let us know to turn off fast rerferencing of a line
+ * @param {string} req.param.route - which route to finish watching.
+**/
 const unwatching = (req, res) => {
   const rt = req.params.route
   for (let x = 0; x !== watchList.length; x++) {
@@ -321,6 +341,10 @@ const unwatching = (req, res) => {
   }
 }
 
+/**
+ * Make sure proper files exist, environment variables set and set correctly,
+ * Will print an error message and abort if anything is wrong.
+**/
 const sanityChecks = () => {
   if (typeof patterns !== 'object') {
     console.error(`
@@ -352,15 +376,19 @@ const sanityChecks = () => {
     process.exit(1)
   }
 
-}
+} 
 
-// END OF FUNCTIONS.  INITALIZE, where everything starts...
-// in reality, we should have a setTimeout routine which
-// determines what to run next - the getAllRoutes or getActiveRoutes
-// then puts this into a file which can be pulled by an app/webpage
-// a specific express route would pull all the vehicle's current
-// rt/latlong/heading/speed, and a general timetilnextupdate field
-// 
+/**
+ * Initialize, where everthing starts.
+ * Set up our abort signal handlers, timers, set up the fastify routes, and start
+ * getting active vehicles.
+ *
+ * @todo - we should have a setTimeout routine which
+ * determines what to run next - the getAllRoutes or getActiveRoutes
+ * then puts this into a file which can be pulled by an app/webpage
+ * a specific express route would pull all the vehicle's current
+ * rt/latlong/heading/speed, and a general timetilnextupdate field
+**/
 const init = () => {
   sanityChecks()
 
