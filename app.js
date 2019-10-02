@@ -3,7 +3,7 @@
  * @file Runs the fastify webserver, grabs data from clever device's API 
  *       for bus services for display on a google map
  *       To my knowledge, this will work with AC Transit (Oakland), 
-         MCTS (Milwaukee), CTA (Chicago)
+ *       MCTS (Milwaukee), CTA (Chicago), MTA (?)
  *
  * @author Rodney T Reid
  * @version 1.0
@@ -19,9 +19,13 @@ const fs = require('fs')
 const path = require('path')
 //const expressStaticGzip = require("express-static-gzip") // compression for routes/timetables
 const patterns = require('./routes.json') // create this file by running refreshRoutes.js
+const agencies = require('./agencies.json') // all busapi enabled agencies - please add to this
 const port = 3000
 
 // Set the following in your enviroment; ( ex: export MCTSAPIKEY="----your key---" )
+const TAGENCY = process.env.TAGENCY
+const TAGENCYKEY = process.env.TAGENCYKEY
+
 const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
 // const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
 const GMAPSKEY = process.env.GMAPSKEY  // GOOGLE MAPS get your own key: https://developers.google.com/maps/documentation/embed/get-api-key
@@ -128,9 +132,9 @@ async function getActiveRoutes() {
 
   // Bunch up the routes in groups of MAXLENGTH(10)
   for (let x = 0; x < routes.length; x += MAXLENGTH) {
-    arrayOfRoutes.push(routes.slice(x, x + MAXLENGTH));
+    arrayOfRoutes.push(routes.slice(x, x + MAXLENGTH))
   }
-  // Do all the fetches, hopefully mostly concurrently
+  // Do all the fetches concurrently
   await Promise.all(arrayOfRoutes.map(async routes => {  
     await getVehicles(routes.join(',')) 
   }))
@@ -274,6 +278,13 @@ const getPattern = (req, res) => {
   })
 }
 
+
+// Send the user information about the agency we're going to be displaying.
+// 
+const agencyconfig = (req, res) => {
+
+}
+
 // load the map.   Yes there are better ways to do this, 
 // @TODO: -- template plugin? (because of that pesky Google Maps API KEY)
 const map_fe = (req, res) => {
@@ -314,6 +325,38 @@ const unwatching = (req, res) => {
   }
 }
 
+const sanityChecks = () => {
+  if (typeof patterns !== 'object') {
+    console.error(`
+      You have to run refreshRoutes.js first, you have no routes.json file!
+    `)
+    process.exit(1)
+  }
+
+  if (!(process.env.TAGENCY)) {
+    console.error(`
+      TAGENCY not set (${process.env.TAGENCY}).  Set TAGENCY to one of the keys (${Object.keys(agencies).join(',')}) in agencies.json
+    `)
+    process.exit(1)
+  }
+
+  if (!(process.env.TAGENCY in agencies)) {
+    console.error(`
+      TAGENCY value (${TAGENCY}) isn't one of these agencies: ${Object.keys(agencies).join(',')}.
+      Set TAGENCY to one of the keys (agencies) in agencies.json (or add a new one)
+    `)
+    process.exit(1)
+  }  
+  if (!(process.env.TAGENCYKEY)) {
+    console.error(`
+      TAGENCYKEY not set.  
+      You have to get an API key to have access to a transit agency's feed.
+    `)
+    process.exit(1)
+  }
+
+}
+
 // END OF FUNCTIONS.  INITALIZE, where everything starts...
 // in reality, we should have a setTimeout routine which
 // determines what to run next - the getAllRoutes or getActiveRoutes
@@ -322,10 +365,7 @@ const unwatching = (req, res) => {
 // rt/latlong/heading/speed, and a general timetilnextupdate field
 // 
 const init = () => {
-  if (typeof patterns !== 'object') {
-    console.error(`You have to run refreshRoutes.js first, you have no routes.json file!`)
-    process.exit(1)
-  }
+  sanityChecks()
 
   startTime = Date.now()
   process.on('SIGINT', () => process.exit())
@@ -339,14 +379,16 @@ const init = () => {
     `)
   })
 
-  fastify.get('/', map_fe)
-  fastify.get('/buses', buses)
-  fastify.get('/routes', routes)
+  fastify.get('/', map_fe) // // serve the initial html
+  fastify.get('/map', map_fe)  // @todo why duplicate?
+
+  fastify.get('/buses', buses) // get evertythig. @todo: remove, wrap into busupdates
+  fastify.get('/agencyconfig', agencyconfig)  // get map coords and bounds
+  fastify.get('/routes', routes) // get all the routes
   fastify.get('/watching', watching) // records, but dont work yet
   fastify.get('/unwatching', unwatching) // records but dont work yet
-  fastify.get('/busupdates', busupdates)
-  fastify.get('/map', map_fe)
-  fastify.get('/pattern/:route/pid/:pid', getPattern)
+  fastify.get('/busupdates', busupdates) // get recent bus updates
+  fastify.get('/pattern/:route/pid/:pid', getPattern) // get the path latlongs for a route
 
   fastify.register(require('fastify-compress'), { global: true })
   fastify.register(require('fastify-static'), {
