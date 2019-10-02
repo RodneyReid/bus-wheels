@@ -1,23 +1,24 @@
 /* globals maps, fontawesome, SlidingMarker, Draggabilly, document, google, fetch */
+'use strict'
+
 /**
  * @file Code for the Google map.  Pulls/draws route patterns, then continually updated lat/longs of vehicles. puts them, animated, on the map.
  * @author Rodney T Reid
- */
-'use strict'
-
-// <bugs-nicetohaves>
-//  (performance-med)     Dont get full vehicle latlng history (since server start) on startup!
-//  (performance-easy)    When vehicle is in expanded map, put that route in "fast" lane for updates, if it's not already there
-//                        This also goes for selected routes on a page, if fast queue isnt full
-//  (ui-trivial)          Northern restriction of map needs to go a little higher for MCTS
-//  (ui-feature-trivial)  Clicking on route list should do _something_ - right now is a no op
-// </bugs-nicetohaves>
-//
-// <future>
-//   This started out as a proof of concept, and now it's overgrown that, as I continue to add new
-//   features/functionality.   We want to put this into Vue, and use Fastify on the back-end (<- fastify, done!)
-// </future>
-// how much do I want to scale the vehicles?  depends on zoom level.  Do they get labels? depends on zoom level
+ *
+ * <bugs-nicetohaves>
+ *  (performance-med)     Dont get full vehicle latlng history (since server start) on startup!
+ *  (performance-easy)    When vehicle is in expanded map, put that route in "fast" lane for updates, if it's not already there
+ *                        This also goes for selected routes on a page, if fast queue isnt full
+ *  (ui-trivial)          Northern restriction of map needs to go a little higher for MCTS
+ *  (ui-feature-trivial)  Clicking on route list should do _something_ - right now is a no op
+ * </bugs-nicetohaves>
+ *
+ * <future>
+ *   This started out as a proof of concept, and now it's overgrown that, as I continue to add new
+ *   features/functionality.   We want to put this into Vue, and use Fastify on the back-end (<- fastify, done!)
+ * </future>
+ * how much do I want to scale the vehicles?  depends on zoom level.  Do they get labels? depends on zoom level
+**/
 const zoomPerScale =  [0.01, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.4, 0.4, 0.5, 0.5]
 const zoomFontSizes = [   0,    0,    0,    0,    3,    3,    3,    4,    4,    4,   5,   5,   7,   8,   8,   9,  10,  10,  11,  12,  12]
 
@@ -65,17 +66,21 @@ let curZoom = 12
 let curZoomScale = 0.3
 let curZoomFontSize = "10pt"
 
-// Delete a bus that isn't seen anymore
-// @param {string} vid - vehicle id # of bus to delete
+/**
+ * Delete a bus that isn't seen anymore
+ * @param {string} vid - vehicle id # of bus to delete
+**/
 const deleteBus = (vid) => {
   if (dbug) console.log(`-🚌 ${vid} Rt: ${busData[vid][0].rt} has left the building...`)
   busData[vid][0].map.setMap(null)
   delete busData[vid]
 }
 
-// find route PIDs
-// @param {string} rt - Bus route we want (active) PIDs for
-// @return {array} unique PIDs matched
+/**
+ * find route PIDs
+ * @param {string} rt - Bus route we want (active) PIDs for
+ * @return {array} unique PIDs matched
+**/
 const findRoutePids = rt => {
   let foundPids = []
 
@@ -86,20 +91,24 @@ const findRoutePids = rt => {
   return [...new Set(foundPids)]
 }
 
-// turns a route on or off, depending on object's state
-// @param {string} id - css id is also the route (with a preceding x)
+/**
+ * turns a route on or off, depending on object's state
+ * @param {string} id - css id is also the route (with a preceding x)
+**/
 const toggleRoute = e => {
   const rt = e.substr(1) // don't want that preceding x
 
   let response = fetch(`/watching/${rt}`)
   //response = response.json()
   //return response
-
 }
 
-// If we roll over a route we want to highlight the route patterns
-// and (future) highlight the buses and show some info on the route
-// @param {string} id - css id is also the route (with a preceding x)
+
+/**
+ * If we roll over a route we want to highlight the route patterns
+ * and (future) highlight the buses and show some info on the route
+ * @param {string} id - css id is also the route (with a preceding x)
+**/
 const routeMouseOver = e => {
   let rt = e.substr(1)
   const pids = findRoutePids(rt)
@@ -114,8 +123,10 @@ const routeMouseOver = e => {
   }
 }
 
-// mouseOut reverses highlight from mouseOVer
-// @param {string} e - the route css id (strip first char for route#)
+/**
+ * mouseOut reverses highlight from mouseOVer
+ * @param {string} e - the route css id (strip first char for route#)
+**/
 const routeMouseOut = e => {
   const rt = e.substr(1) 
   
@@ -123,8 +134,11 @@ const routeMouseOut = e => {
     pidDrawn[pathsBolded[x]].setOptions({ strokeWeight: 1})
   }
 }
-// removes inactive vehicles from the map
-// TODO: removes inactive PIDS/routes too (optional), and inactivates routes if necessary
+
+/**
+ * removes inactive vehicles from the map
+ * @todo removes inactive PIDS/routes too (optional), and inactivates routes if necessary
+**/
 const pruneVehicles = () => {
   const keys = Object.keys(busData)
   const rt = Object.keys(routes)
@@ -140,8 +154,9 @@ const pruneVehicles = () => {
   }
 }
 
-// zoomChanged changes the size of bus icons and captions depending on zoom level.
-//
+/**
+ * changes the size of bus icons and captions depending on zoom level.
+**/
 const zoomChanged = () => {
   curZoom = map.getZoom()
   // zoom levels 10-20.  12 is default.
@@ -176,8 +191,10 @@ const zoomChanged = () => {
   }
 }
 
-// displayBus -  adds a bus to the map, and the route if none exists yet.
-// @param {string} key - vehicle id #
+/**
+ * adds a bus to the map, and the route if none exists yet.
+ * @param {string} key - vehicle id #
+**/
 async function displayBus(key) {
   const bus = busData[key][0]
   bus.map = new SlidingMarker({
@@ -212,10 +229,12 @@ async function displayBus(key) {
   await drawPattern('' + bus.pid, bus.rt, routes[bus.rt].clr) // its smart; it doesn't draw it twice
 }
 
-// Add a new bus to the fray, and display it.
-// @param {string} key - the vehicle ID
-// @param {object} busInfo - information about the vehicle - lat/long, last update, route, direction, etc
-// @return nothing
+/**
+ * Add a new bus to the fray, and display it.
+ * @param {string} key - the vehicle ID
+ * @param {object} busInfo - information about the vehicle - lat/long, last update, route, direction, etc
+ * @return nothing
+**/
 const addBus = (key, busInfo) => {
   busData[key] = []
   busData[key].push(busInfo)
@@ -223,8 +242,12 @@ const addBus = (key, busInfo) => {
   displayBus(key)
 }
 
-// mapUpdates - get new data, and if the vehicle already on map, move/update it, else add a vehicle
-// @return nothing
+/**
+ * mapUpdates - get new data, and if the vehicle already on map, move/update it, else add a vehicle
+ * @return nothing
+ * @todo: sometimes it will immediatly add a vehicle and then prune it - 
+ *       some impedance mismatch between frontend and backend calc'd code?
+**/
 async function mapUpdates() {
   let updates = await updateBusData()
   let keys = Object.keys(updates)
@@ -245,21 +268,26 @@ async function mapUpdates() {
       addBus(key, updates[key])
     }
   })
-  // @todo: sometimes it will immediatly add a vehicle and then prune it - 
-  //       impedance mismatch between frontend and backend calc'd code
+
   pruneVehicles()
 }
 
+/**
+ * Gets the current running vehicle info (speed, direction, latlong) from the server
+ * @return {string} JSON of update bus data
+**/
 async function updateBusData() {
   let response = await fetch('/busupdates')
   response = await response.json()
   return response
 }
 
-// get (if uncached) the pattern for the pid, and draw it in the color
-// @param {string} pid - pattern id
-// @param {string} route - route id
-// @param {string} color - css standard color string, to color the pattern with
+/**
+ * get (if uncached) the pattern for the pid, and draw it in the color
+ * @param {string} pid - pattern id
+ * @param {string} route - route id
+ * @param {string} color - css standard color string, to color the pattern with
+**/
 async function drawPattern(pid, route, color) {
   let response
   if (pid in pidPaths) {
@@ -284,10 +312,12 @@ async function drawPattern(pid, route, color) {
   }
 }
 
-// The route selector UI - takes the list of routes and makes 
-// clickable icons (with route# in route color) in a floating div
-// @@todo - geez I really have to set up vue/react/lit-html with this project
-// because this style is yawn old
+/**
+ * The route selector UI - takes the list of routes and makes 
+ * clickable icons (with route# in route color) in a floating div
+ * @todo - geez I really have to set up vue/react/lit-html with this project
+ * because this style is yawn old
+**/
 const buildRouteUI = () => {
   let col = 0
   let out = `<div id="routes" class="routes"><div class="routerow">`
@@ -304,9 +334,12 @@ const buildRouteUI = () => {
   document.getElementById('routecontainer').innerHTML = out
 }
 
-// Get all the routes, store them in the route object, build route selector
-// @todo - this should also get all the patterns too in one swoop
-// @todo - should store this in localstorage, and patterns w/serviceworker?
+
+/**
+ * Get all the routes, store them in the route object, build route selector
+ * @todo - this should also get all the patterns too in one swoop
+ * @todo - should store this in localstorage, and patterns w/serviceworker?
+**/
 async function getRoutes() {
   let response = await fetch('/routes')
   routes = await response.json()
@@ -317,11 +350,14 @@ async function getRoutes() {
   buildRouteUI()
 }
 
-// Show a popup window giving information on the vehicle, when vehicle clicked.
-// @todo - something so we can only have one clicked at a time.
-//         also - maps.Infowindow isn't going to work for us - put in floating div
-// @param {object} marker - map marker (that looks like a bus)
-// @param {string} key - vehicle id#
+
+/**
+ * Show a popup window giving information on the vehicle, when vehicle clicked.
+ * @todo - something so we can only have one clicked at a time.
+ *         also - maps.Infowindow isn't going to work for us - put in floating div
+ * @param {object} marker - map marker (that looks like a bus)
+ * @param {string} key - vehicle id#
+**/
 const makeClickFunction = (marker, key) => {
   const infowindow = new google.maps.InfoWindow({
     content: `
@@ -387,9 +423,9 @@ const makeClickFunction = (marker, key) => {
   })
 }
 
-
-
-// getOptions 
+/**
+ * Get saved options from localStorage, or default them
+**/
 const getOptions = () => {
   opt = window.localStorage.getItem('opt')
   if (opt) {
@@ -401,10 +437,17 @@ const getOptions = () => {
   }
 }
 
+/**
+ * save options (opt) in localStorage
+**/
 const saveOptions = () => {
   window.localStorage.setItem('opt', JSON.stringify(opt))
 }
-// was getBusData.   initMap hooks up the two maps, 
+
+/**
+ * gets options, sets up maps, draggabilty, gets route info, then gets an initial dump
+ * of bus data.
+**/
 async function initMap() {
   getOptions() // from localStorage
 
@@ -465,14 +508,18 @@ async function initMap() {
   setInterval(mapUpdates, 4000) // probably a little too fast; maybe negotiate with back-end, since it's only one user (ATM?) ---- also, make this setTimeout and on fire reenable it, so we can adjust speed along the way
   return response
 }
-  
-  // called when pageVisibility triggers web page not visible (tabbed to another, minimized window, etc)
+
+/**
+ * called when pageVisibility triggers web page not visible (tabbed to another, minimized window, etc)
+**/
 const pauseDataXfer = () => {
   dataPaused = true
   pauseStart = Date.now()
 }
 
-// called when pageVisibility says we're in view again
+/**
+ * called when pageVisibility says we're in view again
+**/
 const resumeDataXfer = () => {
   dataPaused = false
   const pausedSeconds = (Date.now() - pauseStart) / 1000
@@ -483,14 +530,14 @@ const resumeDataXfer = () => {
   pauseStart = 0
 }
 
-/* Color shifting.  Should be handled by a library, not my code ;) */
-
-// RGB2HSV and HSV2RGB are based on Color Match Remix [http://color.twysted.net/]
-// which is based on or copied from ColorMatch 5K [http://colormatch.dk/]
-// Forgive me, I didn't write this, but I improved it a bit [rr]
-
-// @param {array} rgb - array with red, green, blue values (0-255)
-// @return {array} hsv - array with hue (0-360), saturation (0-100), value (0-100)
+/** 
+ * Color shifting.  Should be handled by a library, not my code ;) 
+ * RGB2HSV and HSV2RGB are based on Color Match Remix [http://color.twysted.net/]
+ * which is based on or copied from ColorMatch 5K [http://colormatch.dk/]
+ * @note Forgive me, I didn't write this, but I improved it a bit [rr]
+ * @param {array} rgb - array with red, green, blue values (0-255)
+ * @return {array} hsv - array with hue (0-360), saturation (0-100), value (0-100)
+**/
 let RGB2HSV = rgb => {
   const hsv = {}
   const max = max3(rgb.r, rgb.g, rgb.b)
@@ -516,9 +563,12 @@ let RGB2HSV = rgb => {
   return hsv
 }
 
-// Forgive me code gods, I didn't write this (but I cleaned it up a lot) [rr]
-// @param {array} hsv - array with hue (0-360), saturation (0-100), value (0-100)
-// @return {array} rgb - array with red, green, blue values (0-255)
+/**
+ * convert an hsv color to an rgb color representation.
+ * @note Forgive me code gods, I didn't write this (but I cleaned it up a lot) [rr]
+ * @param {object} hsv -  with hue (0-360), saturation (0-100), value (0-100)
+ * @return {object} rgb -  with r: red, g: green, b: blue (0-255)
+**/
 let HSV2RGB = hsv => {
   const rgb = {}
   if (hsv.saturation) {
@@ -560,10 +610,12 @@ let HSV2RGB = hsv => {
   return rgb
 }
 
-// Shift the hue, don't let it run over.
-// @param {number} hue - the starting hue
-// @param {number} shift - how much to shift it by
-// @return {number} Normalized hue
+/**
+ * Shift the hue, don't let it run over.
+ * @param {number} hue - the starting hue
+ * @param {number} shift - how much to shift it by
+ * @return {number} Normalized hue
+**/
 let HueShift = (hue, shift) => { 
   hue += shift
   while (hue >= 360.0) hue -= 360.0
@@ -572,10 +624,12 @@ let HueShift = (hue, shift) => {
   return hue
 }
 
-// Shift the luminence, don't let it run over.
-// @param {number} lum - the starting luminence 
-// @param {number} shift - how much to shift it by
-// @return {number} normalized luminence
+/**
+ * Shift the luminence, don't let it run over.
+ * @param {number} lum - the starting luminence 
+ * @param {number} shift - how much to shift it by
+ * @return {number} normalized luminence
+**/
 let LumShift = (lum, shift) => { 
   lum += shift 
   while (lum >= 100.0) lum -= 100.0 
@@ -584,8 +638,13 @@ let LumShift = (lum, shift) => {
   return lum
 }
 
-//min max via Hairgami_Master (sidenote: i'd hate to see a min4/max4 min5/max5 in this style!)
+/**
+ * min max via Hairgami_Master (sidenote: i'd hate to see a min4/max4 min5/max5 in this style!)
+**/
 const min3 = (a, b, c) => ((a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c))
+/**
+ * min max via Hairgami_Master (sidenote: i'd hate to see a min4/max4 min5/max5 in this style!)
+**/
 const max3 = (a, b, c) => ((a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c))
 
 // Set the name of the hidden property and the change event for visibility
@@ -605,8 +664,10 @@ if (typeof document.addEventListener === "undefined" || hidden === undefined) {
   document.addEventListener(visibilityChange, handleVisibilityChange, false)
 }
 
-// @param {function} cb - what happens then;
-// @return {object} - { isFullScreen, event }
+/**
+ * @param {function} cb - what happens then;
+ * @return {object} - { isFullScreen, event }
+**/
 const onFullScreen = cb => {
   const eventNames = [
     'fullscreenchange',
