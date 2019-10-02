@@ -4,38 +4,44 @@
     "logo": false,
     "name": "Milwaukee County Transit System",
     "area": "Milwaukee",
-    "clat": -23.2,
-    "clon": 44.2232,
-    "zoom": 17,
-    "boundULlat": -23.2,
-    "boundULlon": 33.3,
-    "boundLRlat": -34.2,
-    "boundULlon": 23.3
+    "lat": 43.038902,
+    "lon": -87.9065,
+    "zoom": 12,
+    "bound": {
+        "north": -23.2,
+        "south": 33.3,
+        "east": -34.2,
+        "West": 23.3
+    }
   },
   "CTA": {
     "url" : "http://www.ctabustracker.com/bustime/api/v2/",
     "logo": false,
     "name": "Chicago Transit Authority",
     "area": "Chicago",
-    "clat": -23.2,
-    "clon": 44.2232,
+    "lat": -23.2,
+    "lon": 44.2232,
     "zoom": 17,
-    "boundULlat": -23.2,
-    "boundULlon": 33.3,
-    "boundLRlat": -34.2,
-    "boundULlon": 23.3
+    "bound": {
+        "north": -23.2,
+        "south": 33.3,
+        "east": -34.2,
+        "West": 23.3
+    }
   },
   "ACT": {
     "url": "http://realtime.ridemcts.com/bustime/api/v3/",
     "logo": false,
     "name": "Alameda County Transit",
     "area": "Oakland",
-    "clat": -23.2,
-    "clon": 44.2232,
+    "lat": -23.2,
+    "lon": 44.2232,
     "zoom": 17,
-    "boundULlat": -23.2,
-    "boundULlon": 33.3,
-    "boundLRlat": -34.2,
-    "boundULlon": 23.3
+    "bound": {
+        "north": -23.2,
+        "south": 33.3,
+        "east": -34.2,
+        "West": 23.3
+    }
   }
 }

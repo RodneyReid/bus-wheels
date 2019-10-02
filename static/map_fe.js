@@ -40,6 +40,7 @@ const compassPoints = [ // not used yet - should go on the vehicle display
   [338, 'NNW',  'northnorthwest']
 ]
 const dbug = true // turn on usful console logging
+let opt = {} // this comes from localStorage; it's simply named opt because I don't want to type out something long dozens of times.
 let busData = {} // all bus updates get dumped here, by vehicle id#
 // @todo - instead of continually adding to busData vids, we should trim
 //         them to a reasonable amount (say last 20 updates?), and optionally
@@ -386,15 +387,40 @@ const makeClickFunction = (marker, key) => {
   })
 }
 
+
+
+// getOptions 
+const getOptions = () => {
+  opt = window.localStorage.getItem('opt')
+  if (opt) {
+    opt = JSON.parse(opt)
+  } else {
+    opt = {
+      routes: {}
+
+    }
+  }
+
+
+
+}
+
+const saveOptions = () => {
+  window.localStorage.setItem('opt', JSON.stringify(opt))
+}
 // was getBusData.   initMap hooks up the two maps, 
 async function initMap() {
+  getOptions() // from localStorage
+
   const draggableElems = document.querySelectorAll('.draggable')
   
-
   // init Draggabillies
   for (let i = 0; i < draggableElems.length; i++) {
     const draggie = new Draggabilly(draggableElems[i], {
       // options...
+    })
+    draggie.on( 'dragEnd', function(event, pointer) {
+      console.log(`dragEnd: X:${pointer.pageX} Y:${pointer.pageY}`)// pageX / pageY
     })
     draggies.push(draggie)
   }
