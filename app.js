@@ -14,26 +14,22 @@ const fastify = require('fastify')({
   logger: true
 })
 
-const fetch = require('node-fetch') // you can take this out once node has native fetch()!
+const fetch = require('node-fetch') // you can take this out once node has native fetch()
 const fs = require('fs')
 const path = require('path')
-//const expressStaticGzip = require("express-static-gzip") // compression for routes/timetables
+
 const patterns = require('./routes.json') // create this file by running refreshRoutes.js
 const agencies = require('./agencies.json') // all busapi enabled agencies - please add to this
 const port = 3000
 
-// Set the following in your enviroment; ( ex: export MCTSAPIKEY="----your key---" )
+// Set the following in your enviroment; ( ex: export TAGENCKEY="----your key---" )
 const TAGENCY = process.env.TAGENCY
 const TAGENCYKEY = process.env.TAGENCYKEY
-
-const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
-// const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
 const GMAPSKEY = process.env.GMAPSKEY  // GOOGLE MAPS get your own key: https://developers.google.com/maps/documentation/embed/get-api-key
 // const MAPBOX_KEY = process.env.MAPBOXKEY // MAPBOX GL (not used yet) get your own key: https://docs.mapbox.com/help/how-mapbox-works/access-tokens/
 
-const BUSURL = 'http://realtime.ridemcts.com/bustime/api/v3/'
-// const CTABUSURL = 'http://www.ctabustracker.com/bustime/api/v2/'
-const BUSVEHICLES = `${BUSURL}getvehicles?key=${MCTSAPIKEY}&tmres=s&format=json&rt=`
+let BUSURL
+let BUSVEHICLES
 
 let apiCalls = 0 // how many calls have we made so far?  Usual max is 10k a day so am trying to avoid that!
 let routePatterns = {} // lat/long points for routes, along with stop points
@@ -333,21 +329,22 @@ const sanityChecks = () => {
     process.exit(1)
   }
 
-  if (!(process.env.TAGENCY)) {
+  if (!(TAGENCY)) {
     console.error(`
-      TAGENCY not set (${process.env.TAGENCY}).  Set TAGENCY to one of the keys (${Object.keys(agencies).join(',')}) in agencies.json
+      TAGENCY not set.  
+      Set TAGENCY to one of the keys (${Object.keys(agencies).join(',')}) in agencies.json
     `)
     process.exit(1)
   }
 
-  if (!(process.env.TAGENCY in agencies)) {
+  if (!(TAGENCY in agencies)) {
     console.error(`
       TAGENCY value (${TAGENCY}) isn't one of these agencies: ${Object.keys(agencies).join(',')}.
       Set TAGENCY to one of the keys (agencies) in agencies.json (or add a new one)
     `)
     process.exit(1)
   }  
-  if (!(process.env.TAGENCYKEY)) {
+  if (!(TAGENCYKEY)) {
     console.error(`
       TAGENCYKEY not set.  
       You have to get an API key to have access to a transit agency's feed.
@@ -378,6 +375,10 @@ const init = () => {
       ${updRequests} calls from front-end 🚌 🚌 🚌 🚌
     `)
   })
+
+  BUSURL = agencies[TAGENCY].url 
+  BUSVEHICLES = `${BUSURL}getvehicles?key=${TAGENCYKEY}&tmres=s&format=json&rt=`
+
 
   fastify.get('/', map_fe) // // serve the initial html
   fastify.get('/map', map_fe)  // @todo why duplicate?
