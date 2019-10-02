@@ -1,6 +1,6 @@
 /* jshint asi: true, node: true */
 /**
- * @file Runs the fastify webserver, grabs data from clever device's API 
+ * @file Runs the fastify webserver, grabs data from clever device's BusTime API
  *       for bus services for display on a google map
  *       To my knowledge, this will work with AC Transit (Oakland), 
  *       MCTS (Milwaukee), CTA (Chicago), MTA (?)
@@ -45,6 +45,7 @@ let clientProcs = {} // key is fastify process ID, data is last request time, fi
 let updRequests = 0 // how many update requests from the client?
 let updLastReq = 0  // when was the last update request?
 let watchList = [] // @todo - this should be by connectionID
+
 // The Scheduler --- see comments
 let sch = {
   ticks: -1, // goes up one every tickSpeed milliseconds (-1 is to start w/sync)
@@ -54,11 +55,13 @@ let sch = {
   slowTick: 4, // we get the top 30 every slowTick, 
   fastTick: 1, // else we get the top 10 for the rest of the ticks
 }
+
 /**
  * Get all the routes without any of the fluf
  * @return array routes list.  ex:   ['BLU', '59', '55', '30X', ...]
 **/
 const getAllRoutes = () => Object.keys(patterns)
+
 /**
  * getCurrentRoutes is a complex beast; the reasoning is I didn't want
  * to go over the 10,000 maximum API calls a day, and this further limited
@@ -215,7 +218,7 @@ async function getVehicles(routes) {
 }
 
 /**
- * un mangle the time format returned from MCTS
+ * un-mangle the time format returned from BusTime API
  * @param {string} datetime  "YYYYMMDD HH:MM:SS"
  * @return {number} milliseconds since unix epoch
 **/
@@ -237,7 +240,9 @@ const bustime2ms = datetime => {
 **/
 const buses = (req, res) => res.send(JSON.stringify(activeVehicles))
 
-// Returns the entire route list, route id, with route color and full name
+/**
+ * Returns the entire route list, route id, with route color and full name
+**/
 const routes = (req, res) => {
   const rt = getAllRoutes()
   const outx = {}
@@ -434,6 +439,7 @@ const init = () => {
     }
     done()
   })
+  
   getActiveRoutes()
   setInterval(getActiveRoutes, sch.tickSpeed) // @todo this should be more attuned to changing conditions, and use sequential setTimeout() calls
 
