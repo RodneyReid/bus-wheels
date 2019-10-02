@@ -397,12 +397,8 @@ const getOptions = () => {
   } else {
     opt = {
       routes: {}
-
     }
   }
-
-
-
 }
 
 const saveOptions = () => {
