@@ -459,7 +459,7 @@ async function initMap() {
       // options...
     })
     draggie.on( 'dragEnd', function(event, pointer) {
-      console.log(`dragEnd: X:${pointer.pageX} Y:${pointer.pageY}`)// pageX / pageY
+      // console.log(`dragEnd: X:${pointer.pageX} Y:${pointer.pageY}`)// pageX / pageY
     })
     draggies.push(draggie)
   }
