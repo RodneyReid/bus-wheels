@@ -4,30 +4,19 @@
  * stops, color, pid/pid names, and path lat/longs
  * @author Rodney Reid
  *
- * @todo - to incorporate more transit systems and a speedier setup:
- *  -- in the middle of that!
- * 
- * we should put something in the routes file that tells us which agency we're dealing with,
- * and also puts the center lat/long, initial zoom, and bounding lat/longs in an object.
  *
 **/ 
-
 const fetch = require('node-fetch')
 const fs = require('fs')
 const agencies = require('./agencies.json')
 const { PerformanceObserver, performance } = require('perf_hooks')
-const optimizeJSON = false // smaller precision lat/longs
+const optimizeJSON = false // smaller precision lat/longs, doesn't work yet
 // Set the following in your enviroment; ( export MCTSAPIKEY="----some jumble of characters---"  in shell)
-const TAGENCYKEY = process.env.MCTSAPIKEY // @TODO -- for now process.env.TAGENCYKEY // generic for all supposed agencies
+const TAGENCYKEY = process.env.TAGENCYKEY // API key given by transit agency
 const TAGENCY = process.env.TAGENCY // which agency?  MCTS, ACT, CTA, MTA, etc.
-const MCTSAPIKEY = process.env.MCTSAPIKEY // MILWAUKEE - get your own key: http://realtime.ridemcts.com/bustime/newDeveloper.jsp
-const CTAAPIKEY = process.env.CTAAPIKEY // CHICAGO - get your own key: http://www.ctabustracker.com/bustime/newDeveloper.jsp
 
-const BUSURL = 'http://realtime.ridemcts.com/bustime/api/v3/'
-const CTABUSURL = 'http://www.ctabustracker.com/bustime/api/v2/'
-
-const BUSPATTERN = `${BUSURL}getpatterns?key=${MCTSAPIKEY}&tmres=s&format=json&rt=`
-const BUSROUTES = `${BUSURL}getroutes?key=${MCTSAPIKEY}&format=json`
+let BUSPATTERN
+let BUSROUTES
 
 let routes = {} // complete collection of all the fetches of routes, routeinfo, etc
 let gAgency = false
@@ -115,10 +104,11 @@ async function getAllPatterns() {
 }
 
 /**
- * if TAGENCY (transit agency) isn't set in shell, but TANGENCYKEY is, we want to try
+ * If TAGENCY (transit agency) isn't set in shell, but TANGENCYKEY is, we want to try
  * all agencies and determine which one it is.  This should be simple - request a routelist,
  * with their TAGENCYKEY, and see which one doesn't bomb out.
  * @return {string|false} - the agency matching the API key.  Or false if not found
+ * @todo - should be removed - just because I can doesn't mean I should, ha
 **/
 const determineAgency = () => {
   let response
@@ -130,14 +120,12 @@ const determineAgency = () => {
       console.log(`FOUND.  Agency is ${agency}`)
       return agency
     } catch (e) {
-      console.dir(e)
-      console.log(`isn't agency ${agency}`)
       // do nothing, we'll go to the next agency
+      console.log(`isn't agency ${agency}`)
     }
   }
   return false // agency wasn't discovered
 }
-
 
 /**
  * Initialize, sanity check env vars, get all routes and patterns
@@ -149,7 +137,16 @@ const init = () => {
     } else {
       gAgency = determineAgency()
     }
+
+    if (!gAgency) {
+      console.error(`I wasn't able to determine agency, aborting.`)
+      process.exit(1)
+    }
+
+    BUSPATTERN = `${agencies[gAgency].url}getpatterns?key=${TAGENCYKEY}&tmres=s&format=json&rt=`
+    BUSROUTES = `${agencies[gAgency].url}getroutes?key=${TAGENCYKEY}&format=json`
     getAllPatterns()
+
   } else {
     console.error(`env var TAGENCYKEY isn't set, aborting.`)
     process.exit(1)
