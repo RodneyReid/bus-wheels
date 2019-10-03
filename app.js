@@ -284,7 +284,16 @@ const busupdates = (req, res) => {
  *
  * @todo CTA presented a problem - at the time routeRefresh was made, a route wasn't
  *       listed on their route list; 12 hours later it was.  Since I don't think it's
- *       a new line, we might have to refresh on error :(  
+ *       a new line, we might have to refresh on error, like so:
+ *
+ *        1. Get the new route pattern from <agency>
+ *
+ *        2. Insert into patterns
+ *
+ *        3. Write patterns (routes.json) back out
+ *
+ *        4. Return the pattern to the client/frontend
+ *           
  *       for now I generate an error and exit.   
 **/
 const getPattern = (req, res) => {
@@ -306,7 +315,7 @@ const getPattern = (req, res) => {
  * Send the user information about the agency we're going to be displaying.
 **/ 
 const agencyconfig = (req, res) => {
-
+  res.send(JSON.stringify(agencies[TAGENCY]))
 }
 
 /**
