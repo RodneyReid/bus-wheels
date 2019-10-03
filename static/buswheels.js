@@ -41,6 +41,7 @@ const compassPoints = [ // not used yet - should go on the vehicle display
   [338, 'NNW',  'northnorthwest']
 ]
 const dbug = true // turn on usful console logging
+let agencyConfig = {} // has center latlong, bounds, zoom, agency name
 let opt = {} // this comes from localStorage; it's simply named opt because I don't want to type out something long dozens of times.
 let busData = {} // all bus updates get dumped here, by vehicle id#
 // @todo - instead of continually adding to busData vids, we should trim
@@ -445,11 +446,22 @@ const saveOptions = () => {
 }
 
 /**
+ * retrieves agency's configuration from the server (latlong, bounds, name)
+ * @returns {object} configuration for agency
+**/
+async function getAgencyConfig() {
+  let returned = await fetch('/agencyconfig')
+  returned = await returned.parse()
+  return returned
+}
+
+/**
  * gets options, sets up maps, draggabilty, gets route info, then gets an initial dump
  * of bus data.
 **/
 async function initMap() {
   getOptions() // from localStorage
+  agencyConfig = getAgencyConfig() // from server
 
   const draggableElems = document.querySelectorAll('.draggable')
   
@@ -465,10 +477,15 @@ async function initMap() {
   }
 
   map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12, 
-    center: {lat: 41.8781, lng: -87.6298}, 
+    zoom: agencyConfig.zoom, 
+    center: {lat: agencyConfig.lat, lng: agencyConfig.lon}, 
     restriction: {
-      latLngBounds: {north: 42.3, south: 39, west: -88.3, east: -87},
+      latLngBounds: {
+        north: agencyConfig.bound.north, 
+        south: agencyConfig.bound.south,
+        west: agencyConfig.bound.west,
+        east: agencyConfig.bound.east
+      },
       strictBounds: false
     },
     minZoom: 10,
@@ -481,7 +498,7 @@ async function initMap() {
   })
   mapOv = new google.maps.Map(document.getElementById('mapOv'), {
     zoom: 17, 
-    center: {lat: 41.8781, lng: -87.6298}, 
+    center: {lat: agencyConfig.lat, lng: agencyConfig.lon}, 
     disableDefaultUI: true,
     draggable: false,
     disableDoubleClickZoom: true,
@@ -676,8 +693,8 @@ const onFullScreen = cb => {
   ]
 
   eventNames.map(e => document.addEventListener(e, event => {
-    const isFullScreen = document['fullScreen'] ||
-      document['mozFullScreen'] || document['webkitIsFullScreen']
+    const isFullScreen = document.fullScreen ||
+      document.mozFullScreen || document.webkitIsFullScreen
       return cb({ isFullScreen, event })
   }))
 }
