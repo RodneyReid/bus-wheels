@@ -11,7 +11,7 @@ const fs = require('fs')
 const agencies = require('./agencies.json')
 const { PerformanceObserver, performance } = require('perf_hooks')
 const optimizeJSON = false // smaller precision lat/longs, doesn't work yet
-// Set the following in your enviroment; ( export MCTSAPIKEY="----some jumble of characters---"  in shell)
+
 const TAGENCYKEY = process.env.TAGENCYKEY // API key given by transit agency
 const TAGENCY = process.env.TAGENCY // which agency?  MCTS, ACT, CTA, MTA, etc.
 
@@ -19,7 +19,7 @@ let BUSPATTERN
 let BUSROUTES
 
 let routes = {} // complete collection of all the fetches of routes, routeinfo, etc
-let gAgency = false
+let gAgency = false // agency pointer
 /**
  * General information on all the bus routes available -- name, color, route moniker
  * @return {array} - each of the MCTS bus routes ex: { rt: "BLU", rtnm: "Fond du Lac", rtclr: "#000000", rtdd: "BLU" },

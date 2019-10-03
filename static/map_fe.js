@@ -466,9 +466,9 @@ async function initMap() {
 
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12, 
-    center: {lat: 43.038902, lng: -87.9065}, 
+    center: {lat: 41.8781, lng: -87.6298}, 
     restriction: {
-      latLngBounds: {north: 43.279, south: 42.870, west: -88.126, east: -87.81},
+      latLngBounds: {north: 42.3, south: 39, west: -88.3, east: -87},
       strictBounds: false
     },
     minZoom: 10,
@@ -481,7 +481,7 @@ async function initMap() {
   })
   mapOv = new google.maps.Map(document.getElementById('mapOv'), {
     zoom: 17, 
-    center: {lat: 43.038902, lng: -87.9065}, 
+    center: {lat: 41.8781, lng: -87.6298}, 
     disableDefaultUI: true,
     draggable: false,
     disableDoubleClickZoom: true,
