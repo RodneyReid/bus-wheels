@@ -279,18 +279,27 @@ const busupdates = (req, res) => {
  * @param {string} rt     The route we want the pattern for
  * @param {string{ pid    The pattern ID wanted for this route
  * @returns {object} JSON Lat/Long path of whole route, with stops 
- * @TODO at this rate for a PWA, seems like a good idea to send
+ * @todo at this rate for a PWA, seems like a good idea to send
  *       this ONCE, brotli'd - 250k vs 5meg.  We get ~50megs as a PWA, sooo...
+ *
+ * @todo CTA presented a problem - at the time routeRefresh was made, a route wasn't
+ *       listed on their route list; 12 hours later it was.  Since I don't think it's
+ *       a new line, we might have to refresh on error :(  
+ *       for now I generate an error and exit.   
 **/
 const getPattern = (req, res) => {
   const rt = req.params.route
   const pid = req.params.pid
-  
-  patterns[rt].ptr.forEach(pat => {
-    if (pat.pid == pid) {
-      res.send(JSON.stringify(pat))    
-    }
-  })
+  if (patterns[rt] && patterns[rt].ptr) {
+    patterns[rt].ptr.forEach(pat => {
+      if (pat.pid == pid) {
+        res.send(JSON.stringify(pat))    
+      }
+    })
+  } else {
+    console.error(`Pattern not found: rt:${rt}  pid: ${pid}  pat[rt]: ${patterns[rt]}`)
+    process.exit(1)
+  }
 }
 
 /**
@@ -305,7 +314,7 @@ const agencyconfig = (req, res) => {
  * @TODO: -- template plugin? (because of that pesky Google Maps API KEY)
 **/
 const map_fe = (req, res) => {
-  const filePath = path.join(__dirname, '/static/busmap.html')
+  const filePath = path.join(__dirname, '/static/buswheels.html')
   if (res.hasHeader('Content-Type')) {
     console.log('WTF?!?!?!?!!')
   }
