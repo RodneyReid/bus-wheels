@@ -1,4 +1,4 @@
-/* globals maps, fontawesome, SlidingMarker, Draggabilly, document, google, fetch */
+/* globals maps, fontawesome, SlidingMarker, Draggabilly, document, google, fetch, window */
 'use strict'
 
 /**
@@ -451,7 +451,8 @@ const saveOptions = () => {
 **/
 async function getAgencyConfig() {
   let returned = await fetch('/agencyconfig')
-  returned = await returned.parse()
+  console.dir(returned)
+  returned = JSON.parse(returned.body)
   return returned
 }
 
@@ -461,7 +462,7 @@ async function getAgencyConfig() {
 **/
 async function initMap() {
   getOptions() // from localStorage
-  agencyConfig = getAgencyConfig() // from server
+  agencyConfig = await getAgencyConfig() // from server
 
   const draggableElems = document.querySelectorAll('.draggable')
   
@@ -587,7 +588,7 @@ let RGB2HSV = rgb => {
  * @return {object} rgb -  with r: red, g: green, b: blue (0-255)
 **/
 let HSV2RGB = hsv => {
-  const rgb = {}
+  let rgb = {}
   if (hsv.saturation) {
     hsv.hue /= 60
     hsv.saturation /= 100
@@ -667,10 +668,18 @@ const max3 = (a, b, c) => ((a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c))
 // Set the name of the hidden property and the change event for visibility
 let hidden, visibilityChange, vis = "visibilitychange"
 
-if (typeof document.hidden !== "undefined") hidden = "hidden", visibilityChange = vis
-else if (typeof document.msHidden !== "undefined") hidden = "msHidden", visibilityChange = `ms${vis}`
-else if (typeof document.webkitHidden !== "undefined") hidden = "webkitHidden", visibilityChange = `webkit${vis}`
-
+if (typeof document.hidden !== "undefined") {
+  hidden = "hidden"
+  visibilityChange = vis
+}
+else if (typeof document.msHidden !== "undefined") {
+  hidden = "msHidden"
+  visibilityChange = `ms${vis}`
+}
+else if (typeof document.webkitHidden !== "undefined") {
+  hidden = "webkitHidden"
+  visibilityChange = `webkit${vis}`
+}
 // If the page is hidden, dont grab anymore bus data.
 // if the page is shown, grab bus data again -- if > time it would normally have gotten it.  restart interval
 const handleVisibilityChange = () => document[hidden] ? pauseDataXfer() : resumeDataXfer()
