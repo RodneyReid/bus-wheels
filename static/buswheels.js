@@ -450,10 +450,10 @@ const saveOptions = () => {
  * @returns {object} configuration for agency
 **/
 async function getAgencyConfig() {
-  let returned = await fetch('/agencyconfig')
-  console.dir(returned)
-  returned = JSON.parse(returned.body)
-  return returned
+  let response = await fetch('/agencyconfig')
+  response = await response.text()
+
+  return JSON.parse(response)
 }
 
 /**

@@ -315,12 +315,13 @@ const getPattern = (req, res) => {
  * Send the user information about the agency we're going to be displaying.
 **/ 
 const agencyconfig = (req, res) => {
+  //res.header('Content-Type', 'application/json')
   res.send(JSON.stringify(agencies[TAGENCY]))
 }
 
 /**
  * load the map.   Yes there are better ways to do this, 
- * @TODO: -- template plugin? (because of that pesky Google Maps API KEY)
+ * @todo - template plugin? (because of that pesky Google Maps API KEY)
 **/
 const map_fe = (req, res) => {
   const filePath = path.join(__dirname, '/static/buswheels.html')
@@ -334,7 +335,6 @@ const map_fe = (req, res) => {
   streamx.on("data", d =>  buf += d.toString())
   streamx.on("end", d => res.send(buf.replace("${GMAPSKEY}", GMAPSKEY))) 
 }
-
 
 /**
  * let us know that a certain process is watching a certain bus line.
