@@ -368,11 +368,24 @@ const makeClickFunction = (marker, key) => {
       `
   })
 
+  /**
+   * I'm on the bus right now in Miliwaukee, and it's raining... perfect time to program
+   * the marker click function centers the bus on the map, puts it on the overlay map,
+   * and draws the route on the overlay map.
+   *
+   * @todo - we need to find all buses on this route so we can draw ALL the patterns,
+   *         not just the north pattern (if there's a south for instance)
+   *         this doesn't show up until the bus changes direction, at the end of a route
+   * @done   and I did this, while on the bus...
+   *
+   **/
   marker.addListener('click', () => {
     // if (curZoom < 15) map.setZoom(15)  
     // the above doesn't mesh well with the overlay map nav so removed for now
     map.setCenter(marker.getPosition())
     mapOv.setCenter(marker.getPosition())
+    
+    // this needs to be updated on vehicle updates
     infowindow.open(marker.get('map'), marker)
     document.getElementById('routeinfo').innerHTML = `
       <b>Vehicle ID</b> ${busData[key][0].vid}<br />
@@ -380,10 +393,24 @@ const makeClickFunction = (marker, key) => {
       <b>Head/Speed</b> ${busData[key][0].hdg}deg/${busData[key][0].spd}mph<br />
     `
     const mpath = []
-    
-    pidPaths[busData[key][0].pid].forEach(pObj => {
-      mpath.push({ lat: pObj.lat, lng: pObj.lon})
-    })
+    let pids = []
+    // get all the pids for the route
+    for (let bus in busData) {
+      if (busData[bus][0].rt === busData[key][0].rt) {
+        pids.push(busData[bus][0].pid)
+      }
+    }
+    pids = [...new Set(pids)] // remove dupes
+
+    for (let pid in pids) {
+      pidPaths[busData[key][0].pid].forEach(pObj => {
+        mpath.push({ lat: pObj.lat, lng: pObj.lon})
+      })   
+    }
+
+    //pidPaths[busData[key][0].pid].forEach(pObj => {
+    //  mpath.push({ lat: pObj.lat, lng: pObj.lon})
+    //})
 
     if (expandPolyline) expandPolyline.setMap(null)
     expandPolyline = new google.maps.Polyline({
