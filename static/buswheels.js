@@ -475,6 +475,7 @@ const saveOptions = () => {
 /**
  * retrieves agency's configuration from the server (latlong, bounds, name)
  * @returns {object} configuration for agency
+ * @todo figure out why we can't use a response.parse() vs. text() ... serverside content-type?!
 **/
 async function getAgencyConfig() {
   let response = await fetch('/agencyconfig')
