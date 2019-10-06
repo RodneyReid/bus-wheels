@@ -114,7 +114,7 @@ const routeMouseOver = e => {
   let rt = e.substr(1)
   const pids = findRoutePids(rt)
   pathsBolded = []
-
+  // @todo - use findRoutePids()
   for (let x in busData) {
     const pid = '' + busData[x][0].pid
     if (pids.includes(pid)) {
@@ -614,6 +614,7 @@ let RGB2HSV = rgb => {
  * @note Forgive me code gods, I didn't write this (but I cleaned it up a lot) [rr]
  * @param {object} hsv -  with hue (0-360), saturation (0-100), value (0-100)
  * @return {object} rgb -  with r: red, g: green, b: blue (0-255)
+ * @todo all of the color functions are unused right now
 **/
 let HSV2RGB = hsv => {
   let rgb = {}
