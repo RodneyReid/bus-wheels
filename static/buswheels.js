@@ -2,7 +2,10 @@
 'use strict'
 
 /**
- * @file Code for the Google map.  Pulls/draws route patterns, then continually updated lat/longs of vehicles. puts them, animated, on the map.
+ * @file Front-end code for Bus-Wheels app.  
+ * Pulls/draws route patterns, then continually updated lat/longs of vehicles. 
+ * puts them, animated, on the map.
+ *
  * @author Rodney T Reid
  *
  * <bugs-nicetohaves>
@@ -11,6 +14,8 @@
  *                        This also goes for selected routes on a page, if fast queue isnt full
  *  (ui-trivial)          Northern restriction of map needs to go a little higher for MCTS
  *  (ui-feature-trivial)  Clicking on route list should do _something_ - right now is a no op
+ *  (ui-feature)          Put compass (for direction) and speed on overlay map if mouse'd over 
+ *                        (how to handle phone/touchscreens?)
  * </bugs-nicetohaves>
  *
  * <future>
@@ -159,8 +164,7 @@ const pruneVehicles = () => {
  * changes the size of bus icons and captions depending on zoom level.
 **/
 const zoomChanged = () => {
-  curZoom = map.getZoom()
-  // zoom levels 10-20.  12 is default.
+  curZoom = map.getZoom() // zoom levels 10-20.  12 is default.
   
   curZoomScale = zoomPerScale[curZoom]
   curZoomFontSize = zoomFontSizes[curZoom]
@@ -269,12 +273,11 @@ async function mapUpdates() {
       addBus(key, updates[key])
     }
   })
-
   pruneVehicles()
 }
 
 /**
- * Gets the current running vehicle info (speed, direction, latlong) from the server
+ * Gets the current running vehicle info (speed, direction, latlong) from server
  * @return {string} JSON of update bus data
 **/
 async function updateBusData() {
@@ -327,7 +330,7 @@ const buildRouteUI = () => {
     out += `<div class="route" id="x${rt}" style="background-color:${routes[rt].clr}" onmouseover="routeMouseOver(this.id)" onmouseout="routeMouseOut(this.id)" onclick="toggleRoute()">${rt}</div>`
   }
   out += `</div>`
-  
+
   document.getElementById('routecontainer').innerHTML = out
 }
 
@@ -365,15 +368,10 @@ const makeClickFunction = (marker, key) => {
   })
 
   /**
-   * I'm on the bus right now in Miliwaukee, and it's raining... perfect time to program
-   * the marker click function centers the bus on the map, puts it on the overlay map,
+   * The marker click function centers the bus on map, puts it on the overlay map,
    * and draws the route on the overlay map.
    *
-   * @todo - we need to find all buses on this route so we can draw ALL the patterns,
-   *         not just the north pattern (if there's a south for instance)
-   *         this doesn't show up until the bus changes direction, at the end of a route
-   * @done   and I did this, while on the bus...
-   *
+   * @todo - sliding marker duration should depend on polling rate
    **/
   marker.addListener('click', () => {
     // if (curZoom < 15) map.setZoom(15)  
@@ -403,10 +401,6 @@ const makeClickFunction = (marker, key) => {
         mpath.push({ lat: pObj.lat, lng: pObj.lon})
       })   
     }
-
-    //pidPaths[busData[key][0].pid].forEach(pObj => {
-    //  mpath.push({ lat: pObj.lat, lng: pObj.lon})
-    //})
 
     if (expandPolyline) expandPolyline.setMap(null)
     expandPolyline = new google.maps.Polyline({
@@ -730,7 +724,7 @@ const onFullScreen = cb => {
   eventNames.map(e => document.addEventListener(e, event => {
     const isFullScreen = document.fullScreen ||
       document.mozFullScreen || document.webkitIsFullScreen
-      return cb({ isFullScreen, event })
+    return cb({ isFullScreen, event })
   }))
 }
 
