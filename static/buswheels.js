@@ -247,7 +247,7 @@ const addBus = (key, busInfo) => {
  * mapUpdates - get new data, and if the vehicle already on map, move/update it, else add a vehicle
  * @return nothing
  * @todo: sometimes it will immediatly add a vehicle and then prune it - 
- *       some impedance mismatch between frontend and backend calc'd code?
+ *        some impedance mismatch between frontend and backend calc'd code?
 **/
 async function mapUpdates() {
   let updates = await updateBusData()
@@ -321,17 +321,13 @@ async function drawPattern(pid, route, color) {
 **/
 const buildRouteUI = () => {
   let col = 0
-  let out = `<div id="routes" class="routes"><div class="routerow">`
+  let out = `<div id="routes" class="routes">` 
   
   for (let rt in routes) {
-    col++    
-    if (col > 9) {
-      col = 0
-      out += `</div><div class="routerow">`
-    }
     out += `<div class="route" id="x${rt}" style="background-color:${routes[rt].clr}" onmouseover="routeMouseOver(this.id)" onmouseout="routeMouseOut(this.id)" onclick="toggleRoute()">${rt}</div>`
   }
-  out += `</div></div>`
+  out += `</div>`
+  
   document.getElementById('routecontainer').innerHTML = out
 }
 
@@ -485,8 +481,9 @@ async function getAgencyConfig() {
 }
 
 /**
- * gets options, sets up maps, draggabilty, gets route info, then gets an initial dump
- * of bus data.
+ * gets options, sets up maps, draggabilty, gets route info, then 
+ * gets an initial dump of bus data.
+ * @todo - this initial dump is a different call than update - make em the same
 **/
 async function initMap() {
   getOptions() // from localStorage

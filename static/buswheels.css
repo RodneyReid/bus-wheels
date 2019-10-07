@@ -118,6 +118,9 @@ html, body {
  * @todo this needs to shrink and grow as necessary, and collapse
  */
 #routecontainer {
+  flex-direction: row;
+  flex-wrap: wrap;
+  display: flex;
   position: absolute;
   top: 20px; right: 20px;
   z-index: 500;
@@ -147,8 +150,9 @@ html, body {
  *       of the individual route selector to show state?
  */
 .route {
+
   display: inline-block;
-  float: left;
+  /* float: left; unneeded with flex-box */
   width: 23px; height: 20px;
   font-size: 8pt;
   line-height: 20px;
