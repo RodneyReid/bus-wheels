@@ -327,7 +327,20 @@ const buildRouteUI = () => {
   let out = `<div id="routes" class="routes">` 
   
   for (let rt in routes) {
-    out += `<div class="route" id="x${rt}" style="background-color:${routes[rt].clr}" onmouseover="routeMouseOver(this.id)" onmouseout="routeMouseOut(this.id)" onclick="toggleRoute()">${rt}</div>`
+    let bgColor = routes[rt].clr
+    if (!opt.activeRoutes[rt]) { // is the route active?
+      let rgb = hex2rgb(bgColor)
+      let hsv = rgb2hsv(rgb)
+      hsv.s = 20
+      rgb = hsv2rgb(hsv)
+      bgColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`
+    }
+
+    out += `<div class="route" id="x${rt}" 
+      style="background-color:${bgColor}" 
+      onmouseover="routeMouseOver(this.id)" 
+      onmouseout="routeMouseOut(this.id)" 
+      onclick="toggleRoute()">${rt}</div>`
   }
   out += `</div>`
 
@@ -343,6 +356,8 @@ const buildRouteUI = () => {
 async function getRoutes() {
   let response = await fetch('/routes')
   routes = await response.json()
+
+  let patterns = await fetch('/patterns')
 
   // this should now get the localStorage routes, favorite stops, etc, that were 
   // previously selected.
@@ -372,6 +387,7 @@ const makeClickFunction = (marker, key) => {
    * and draws the route on the overlay map.
    *
    * @todo - sliding marker duration should depend on polling rate
+   * @todo routeinfo needs to be updated on vehicle updates!
    **/
   marker.addListener('click', () => {
     // if (curZoom < 15) map.setZoom(15)  
@@ -379,7 +395,7 @@ const makeClickFunction = (marker, key) => {
     map.setCenter(marker.getPosition())
     mapOv.setCenter(marker.getPosition())
     
-    // this needs to be updated on vehicle updates
+    // 
     infowindow.open(marker.get('map'), marker)
     document.getElementById('routeinfo').innerHTML = `
       <b>Vehicle ID</b> ${busData[key][0].vid}<br />
@@ -450,13 +466,14 @@ const getOptions = () => {
     opt = JSON.parse(opt)
   } else {
     opt = {
-      routes: {}
+      activeRoutes: {}
     }
   }
 }
 
 /**
  * save options (opt) in localStorage
+ * we should do this everytime a change is made/route turned on/off
 **/
 const saveOptions = () => {
   window.localStorage.setItem('opt', JSON.stringify(opt))
@@ -567,6 +584,23 @@ const resumeDataXfer = () => {
   pauseStart = 0
 }
 
+/**
+ * Changes a hex digit to a decimal digit
+ * @param {string} hex - a single hex charater
+ * @returns {number} digit - a digit between 0 and 15
+ */
+const hex2dec = hex => '0123456789ABCDEF'.indexOf(hex) // should sanity check
+
+const hex2rgb = hex => {
+  let xHex = hex.substr(1).toUpper()
+  let rgb = {}
+  rgb.r = hex2dec(xHex.shift()) * 16 + hex2dec(xHex.shift())
+  rgb.g = hex2dec(xHex.shift()) * 16 + hex2dec(xHex.shift())
+  rgb.b = hex2dec(xHex.shift()) * 16 + hex2dec(xHex.shift())
+
+  return rgb
+}
+
 /** 
  * Color shifting.  Should be handled by a library, not my code ;) 
  * RGB2HSV and HSV2RGB are based on Color Match Remix [http://color.twysted.net/]
@@ -575,7 +609,7 @@ const resumeDataXfer = () => {
  * @param {array} rgb - array with red, green, blue values (0-255)
  * @return {array} hsv - array with hue (0-360), saturation (0-100), value (0-100)
 **/
-let RGB2HSV = rgb => {
+let rgb2hsv = rgb => {
   const hsv = {}
   const max = max3(rgb.r, rgb.g, rgb.b)
   const dif = max - min3(rgb.r, rgb.g, rgb.b)
@@ -607,7 +641,7 @@ let RGB2HSV = rgb => {
  * @return {object} rgb -  with r: red, g: green, b: blue (0-255)
  * @todo all of the color functions are unused right now
 **/
-let HSV2RGB = hsv => {
+let hsv2rgb = hsv => {
   let rgb = {}
   if (hsv.saturation) {
     hsv.hue /= 60
@@ -654,7 +688,7 @@ let HSV2RGB = hsv => {
  * @param {number} shift - how much to shift it by
  * @return {number} Normalized hue
 **/
-let HueShift = (hue, shift) => { 
+let shiftHue = (hue, shift) => { 
   hue += shift
   while (hue >= 360.0) hue -= 360.0
   while (hue < 0.0) hue += 360.0
@@ -668,7 +702,7 @@ let HueShift = (hue, shift) => {
  * @param {number} shift - how much to shift it by
  * @return {number} normalized luminence
 **/
-let LumShift = (lum, shift) => { 
+let shiftLum = (lum, shift) => { 
   lum += shift 
   while (lum >= 100.0) lum -= 100.0 
   while (lum < 0.0) lum += 100.0 

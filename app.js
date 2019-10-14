@@ -449,7 +449,7 @@ const init = () => {
   })
 
   // I'm doing this to get around a bug in fastify-compress, where it would
-  // never do dynamic brotli encoding if there were more than type and it wasn't first.
+  // never do dynamic brotli encoding if there were more than 1 type and it wasn't first.
   // Works now, I WIN
   fastify.addHook('preHandler', (req, reply, done) => {
     if(req.headers['accept-encoding'].includes('br')) {
