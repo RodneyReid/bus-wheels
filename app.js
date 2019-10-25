@@ -325,8 +325,10 @@ const agencyconfig = (req, res) => {
 **/
 const map_fe = (req, res) => {
   const filePath = path.join(__dirname, '/static/buswheels.html')
+  
+  // @todo - verify that this was in here just for debugging and remove it.
   if (res.hasHeader('Content-Type')) {
-    console.log('WTF?!?!?!?!!')
+    console.log(`DEBUG: Why here? Content-Type set.`)
   }
 
   res.header('Content-Type', 'text/html')
