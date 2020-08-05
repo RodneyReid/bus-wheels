@@ -9,7 +9,7 @@
   "author": "Rodney Reid",
   "license": "MIT",
   "dependencies": {
-    "fastify": "^2.8.0",
+    "fastify": "^2.15.1",
     "fastify-compress": "^0.11.0",
     "fastify-static": "^2.5.0",
     "node-fetch": "^2.6.0"
